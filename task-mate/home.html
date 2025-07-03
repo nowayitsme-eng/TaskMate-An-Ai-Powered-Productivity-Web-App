@@ -1313,14 +1313,15 @@
     } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
     // Your Firebase Config
+    // Replace all the # with your firebase given key
     const firebaseConfig = {
-      apiKey: "AIzaSyCIuCEWRXeuCfYM9KXQ0lgk4jnxQQfAzaA",
-      authDomain: "taskmate-5f854.firebaseapp.com",
-      projectId: "taskmate-5f854",
-      storageBucket: "taskmate-5f854.firebasestorage.app",
-      messagingSenderId: "776886718939",
-      appId: "1:776886718939:web:946ba9fb04153a150697fe",
-      measurementId: "G-WEKXP20HC2"
+      apiKey: "#",
+      authDomain: "#",
+      projectId: "#",
+      storageBucket: "#",
+      messagingSenderId: "#",
+      appId: "#",
+      measurementId: "#"
     };
 
     // Initialize Firebase
@@ -1942,12 +1943,12 @@ const conversationHistory = [
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer #", //Replace the # with your api key
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin || "http://localhost"
       },
       body: JSON.stringify({
-        "model": "deepseek/deepseek-r1-0528:free",
+        "model": "deepseek/deepseek-r1-0528:free", // You can change this depending on the ai you use
         "messages": conversationHistory,
         "stream": true
       })
@@ -2237,12 +2238,12 @@ function addCopyButtonsToCodeBlocks(container) {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer #", //Replace # with you api key
             "Content-Type": "application/json",
             "HTTP-Referer": window.location.origin || "http://localhost"
           },
           body: JSON.stringify({
-            "model": "deepseek/deepseek-r1-0528:free",
+            "model": "deepseek/deepseek-r1-0528:free", //You can change this depending upon the ai you use
             "messages": [
               {
                 "role": "system",
