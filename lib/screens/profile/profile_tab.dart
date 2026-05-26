@@ -1,0 +1,407 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../models/user_profile.dart';
+import '../../services/auth_service.dart';
+import '../../services/gamification_service.dart';
+import '../../services/activity_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/activity_heatmap.dart';
+
+class ProfileTab extends StatefulWidget {
+  const ProfileTab({super.key});
+
+  @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  final GamificationService _gamService = GamificationService();
+  final ActivityService _activityService = ActivityService();
+
+  Map<String, int> _activityMap = {};
+  bool _heatmapLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHeatmap();
+  }
+
+  Future<void> _loadHeatmap() async {
+    final userId = context.read<AuthService>().user?.uid;
+    if (userId == null) return;
+    final map = await _activityService.getActivityMap(userId);
+    if (mounted) {
+      setState(() {
+        _activityMap = map;
+        _heatmapLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = context.watch<AuthService>().user?.uid;
+    if (userId == null) return const SizedBox.shrink();
+
+    return StreamBuilder<UserProfile>(
+      stream: _gamService.getUserProfile(userId),
+      builder: (context, snapshot) {
+        final profile = snapshot.data ?? const UserProfile();
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProfileHeader(profile),
+              const SizedBox(height: 24),
+              _buildXpCard(profile),
+              const SizedBox(height: 24),
+              _buildBadgesSection(profile),
+              const SizedBox(height: 24),
+              _buildHeatmapSection(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ─── Profile Header ───────────────────────────────────────────────────────
+
+  Widget _buildProfileHeader(UserProfile profile) {
+    final userId = context.read<AuthService>().user?.uid ?? '';
+    final defaultName = context.read<AuthService>().user?.email?.split('@').first ?? 'User';
+    final userName = profile.displayName ?? defaultName;
+    final levelEmoji = _levelEmoji(profile.level);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary.withValues(alpha: 0.25), AppTheme.accent.withValues(alpha: 0.1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          // Avatar with level ring
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [AppTheme.primary.withValues(alpha: 0.4), AppTheme.primaryDark.withValues(alpha: 0.2)],
+              ),
+              border: Border.all(color: AppTheme.primary, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.4),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(levelEmoji, style: const TextStyle(fontSize: 36)),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        userName,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 16, color: AppTheme.grayLight),
+                      onPressed: () => _editUsername(context, userId, userName),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        'Level ${profile.level}',
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryLight),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${profile.xp} XP total',
+                      style: const TextStyle(color: AppTheme.gray, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${profile.badges.length} badge${profile.badges.length != 1 ? 's' : ''} earned',
+                  style: const TextStyle(color: AppTheme.grayLight, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Edit Username ────────────────────────────────────────────────────────
+
+  Future<void> _editUsername(BuildContext context, String userId, String currentName) async {
+    final controller = TextEditingController(text: currentName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.dark,
+        title: const Text('Edit Username'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Enter new username'),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppTheme.grayLight)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty && newName != currentName) {
+      await _gamService.updateDisplayName(userId, newName);
+    }
+  }
+
+  // ─── XP Progress Card ─────────────────────────────────────────────────────
+
+  Widget _buildXpCard(UserProfile profile) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('XP Progress',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  '${profile.xpInCurrentLevel} / ${profile.xpForNextLevel} XP',
+                  style: const TextStyle(color: AppTheme.primaryLight, fontSize: 13),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: profile.levelProgress),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutCubic,
+                builder: (_, value, __) => LinearProgressIndicator(
+                  value: value,
+                  minHeight: 14,
+                  backgroundColor: Colors.white.withValues(alpha: 0.06),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildXpHint('✅ Task', '+10 XP'),
+                _buildXpHint('🍅 Pomodoro min', '+1 XP'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildXpHint(String label, String value) {
+    return Row(
+      children: [
+        Text(label, style: const TextStyle(color: AppTheme.gray, fontSize: 12)),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppTheme.secondary.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(value,
+              style: const TextStyle(
+                  color: AppTheme.secondaryLight,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold)),
+        ),
+      ],
+    );
+  }
+
+  // ─── Badges Section ───────────────────────────────────────────────────────
+
+  Widget _buildBadgesSection(UserProfile profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Badges',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              '${profile.badges.length} / ${kAllBadges.length}',
+              style: const TextStyle(fontSize: 12, color: AppTheme.gray),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.85,
+          children: kAllBadges.map((badge) {
+            final earned = profile.badges.contains(badge.id);
+            return _buildBadgeCard(badge, earned);
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBadgeCard(BadgeInfo badge, bool earned) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: earned
+            ? AppTheme.primary.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: earned
+              ? AppTheme.primary.withValues(alpha: 0.4)
+              : Colors.white.withValues(alpha: 0.06),
+          width: earned ? 1.5 : 1,
+        ),
+        boxShadow: earned
+            ? [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.2), blurRadius: 8)]
+            : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Text(
+                badge.emoji,
+                style: TextStyle(
+                  fontSize: 32,
+                  color: earned ? null : Colors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              if (!earned)
+                const Icon(Icons.lock, size: 18, color: Colors.white30),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            badge.name,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: earned ? AppTheme.primaryLight : AppTheme.gray,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            badge.description,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 9,
+              color: earned
+                  ? AppTheme.grayLight.withValues(alpha: 0.7)
+                  : AppTheme.gray.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Heatmap Section ──────────────────────────────────────────────────────
+
+  Widget _buildHeatmapSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('365-Day Activity',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            if (_heatmapLoading)
+              const Center(child: CircularProgressIndicator())
+            else
+              ActivityHeatmap(activityMap: _activityMap),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Helper ───────────────────────────────────────────────────────────────
+
+  String _levelEmoji(int level) {
+    if (level >= 20) return '👑';
+    if (level >= 15) return '🔥';
+    if (level >= 10) return '⚡';
+    if (level >= 5) return '🌟';
+    return '🌱';
+  }
+}
