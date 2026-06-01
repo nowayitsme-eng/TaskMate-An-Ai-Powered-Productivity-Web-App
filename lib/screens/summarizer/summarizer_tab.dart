@@ -197,9 +197,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget _buildModeSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -220,10 +220,10 @@ class _SummarizerTabState extends State<SummarizerTab> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? AppTheme.primary.withOpacity(0.25) : Colors.transparent,
+            color: isActive ? AppTheme.primary.withValues(alpha: 0.25) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isActive ? AppTheme.primary.withOpacity(0.5) : Colors.transparent,
+              color: isActive ? AppTheme.primary.withValues(alpha: 0.5) : Colors.transparent,
             ),
           ),
           child: Column(
@@ -250,9 +250,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget _buildInputArea() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       padding: const EdgeInsets.all(16),
       child: TextField(
@@ -274,9 +274,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget _buildSummaryOutput() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -343,7 +343,7 @@ class _SummarizerTabState extends State<SummarizerTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: AppTheme.primary.withOpacity(0.3)),
+          Icon(icon, size: 48, color: AppTheme.primary.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(
             message,
@@ -427,16 +427,16 @@ class _FlipCardState extends State<_FlipCard>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isFront
-                      ? [AppTheme.primary.withOpacity(0.2), AppTheme.primaryDark.withOpacity(0.15)]
-                      : [AppTheme.secondary.withOpacity(0.2), AppTheme.secondaryDark.withOpacity(0.15)],
+                      ? [AppTheme.primary.withValues(alpha: 0.2), AppTheme.primaryDark.withValues(alpha: 0.15)]
+                      : [AppTheme.secondary.withValues(alpha: 0.2), AppTheme.secondaryDark.withValues(alpha: 0.15)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isFront
-                      ? AppTheme.primary.withOpacity(0.35)
-                      : AppTheme.secondary.withOpacity(0.35),
+                      ? AppTheme.primary.withValues(alpha: 0.35)
+                      : AppTheme.secondary.withValues(alpha: 0.35),
                 ),
               ),
               child: Transform(
@@ -453,8 +453,8 @@ class _FlipCardState extends State<_FlipCard>
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: isFront
-                                ? AppTheme.primary.withOpacity(0.25)
-                                : AppTheme.secondary.withOpacity(0.25),
+                                ? AppTheme.primary.withValues(alpha: 0.25)
+                                : AppTheme.secondary.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -469,7 +469,7 @@ class _FlipCardState extends State<_FlipCard>
                         Icon(
                           Icons.touch_app,
                           size: 14,
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ],
                     ),
@@ -561,7 +561,7 @@ class _QuizWidgetState extends State<_QuizWidget> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (_currentIndex + 1) / total,
-              backgroundColor: Colors.white.withOpacity(0.08),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
               minHeight: 6,
             ),
@@ -585,9 +585,9 @@ class _QuizWidgetState extends State<_QuizWidget> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primary.withOpacity(0.25)),
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
             ),
             child: Text(
               q['question'] as String,
@@ -602,17 +602,17 @@ class _QuizWidgetState extends State<_QuizWidget> {
             if (_answered) {
               if (i == correctIndex) {
                 borderColor = AppTheme.secondary;
-                bgColor = AppTheme.secondary.withOpacity(0.15);
+                bgColor = AppTheme.secondary.withValues(alpha: 0.15);
               } else if (i == _selectedOption && i != correctIndex) {
                 borderColor = AppTheme.danger;
-                bgColor = AppTheme.danger.withOpacity(0.12);
+                bgColor = AppTheme.danger.withValues(alpha: 0.12);
               } else {
-                borderColor = Colors.white.withOpacity(0.06);
-                bgColor = Colors.white.withOpacity(0.03);
+                borderColor = Colors.white.withValues(alpha: 0.06);
+                bgColor = Colors.white.withValues(alpha: 0.03);
               }
             } else {
-              borderColor = Colors.white.withOpacity(0.1);
-              bgColor = Colors.white.withOpacity(0.04);
+              borderColor = Colors.white.withValues(alpha: 0.1);
+              bgColor = Colors.white.withValues(alpha: 0.04);
             }
 
             return GestureDetector(
@@ -634,10 +634,10 @@ class _QuizWidgetState extends State<_QuizWidget> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: _answered && i == correctIndex
-                            ? AppTheme.secondary.withOpacity(0.3)
+                            ? AppTheme.secondary.withValues(alpha: 0.3)
                             : _answered && i == _selectedOption
-                                ? AppTheme.danger.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.08),
+                                ? AppTheme.danger.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.08),
                       ),
                       child: Center(
                         child: Text(
@@ -694,8 +694,8 @@ class _QuizWidgetState extends State<_QuizWidget> {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.12),
-              border: Border.all(color: color.withOpacity(0.4), width: 3),
+              color: color.withValues(alpha: 0.12),
+              border: Border.all(color: color.withValues(alpha: 0.4), width: 3),
             ),
             child: Center(
               child: Column(
@@ -708,7 +708,7 @@ class _QuizWidgetState extends State<_QuizWidget> {
                   ),
                   Text(
                     '$_score / $total',
-                    style: TextStyle(fontSize: 13, color: color.withOpacity(0.8)),
+                    style: TextStyle(fontSize: 13, color: color.withValues(alpha: 0.8)),
                   ),
                 ],
               ),

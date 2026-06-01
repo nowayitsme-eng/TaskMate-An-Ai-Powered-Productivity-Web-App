@@ -164,7 +164,7 @@ class _TasksTabState extends State<TasksTab> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.2),
+                            color: AppTheme.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.auto_awesome, color: AppTheme.primaryLight, size: 20),
@@ -204,13 +204,13 @@ class _TasksTabState extends State<TasksTab> {
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: selected[i]
-                                  ? AppTheme.primary.withOpacity(0.12)
-                                  : Colors.white.withOpacity(0.04),
+                                  ? AppTheme.primary.withValues(alpha: 0.12)
+                                  : Colors.white.withValues(alpha: 0.04),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: selected[i]
-                                    ? AppTheme.primary.withOpacity(0.4)
-                                    : Colors.white.withOpacity(0.08),
+                                    ? AppTheme.primary.withValues(alpha: 0.4)
+                                    : Colors.white.withValues(alpha: 0.08),
                               ),
                             ),
                             child: CheckboxListTile(
@@ -227,7 +227,7 @@ class _TasksTabState extends State<TasksTab> {
                                 width: 28,
                                 height: 28,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withOpacity(0.15),
+                                  color: AppTheme.primary.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -383,14 +383,14 @@ class _TasksTabState extends State<TasksTab> {
                     width: 56,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppTheme.primary.withOpacity(0.8), AppTheme.primaryDark],
+                        colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primaryDark],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primary.withOpacity(0.4),
+                          color: AppTheme.primary.withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -486,7 +486,7 @@ class _TasksTabState extends State<TasksTab> {
                 const SizedBox(width: 5),
                 Text(
                   'Tap ✨ to let AI break your task into sub-tasks',
-                  style: TextStyle(fontSize: 12, color: AppTheme.primaryLight.withOpacity(0.7)),
+                  style: TextStyle(fontSize: 12, color: AppTheme.primaryLight.withValues(alpha: 0.7)),
                 ),
               ],
             ),
@@ -587,8 +587,10 @@ class _TasksTabState extends State<TasksTab> {
                       onChanged: isOffline ? null : (val) async {
                         if (val != null) {
                           _taskService.updateTask(userId, task.id, {'completed': val});
-                          
                           if (val && !task.completed) {
+                            // Capture context before async gaps
+                            final messenger = ScaffoldMessenger.of(context);
+                            
                             // Task just completed!
                             await _activityService.logActivity(userId, tasksCompleted: 1);
                             await _gamService.addXp(userId, GamificationService.xpPerTask);
@@ -598,7 +600,6 @@ class _TasksTabState extends State<TasksTab> {
                             final totalCompleted = allTasks.where((t) => t.completed).length + 1;
                             final totalPomodoro = allTasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
                             
-                            final messenger = ScaffoldMessenger.of(context);
                             final earned = await _gamService.checkAndAwardBadges(
                               userId,
                               totalCompleted: totalCompleted,
@@ -641,14 +642,14 @@ class _TasksTabState extends State<TasksTab> {
                         if (task.subject != null)
                           Chip(
                             label: Text(task.subject!, style: const TextStyle(fontSize: 10)),
-                            backgroundColor: AppTheme.primary.withOpacity(0.2),
+                            backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
                             padding: EdgeInsets.zero,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                         if (task.type != null)
                           Chip(
                             label: Text(task.type!, style: const TextStyle(fontSize: 10)),
-                            backgroundColor: AppTheme.secondary.withOpacity(0.2),
+                            backgroundColor: AppTheme.secondary.withValues(alpha: 0.2),
                             padding: EdgeInsets.zero,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -656,7 +657,7 @@ class _TasksTabState extends State<TasksTab> {
                           Chip(
                             avatar: const Icon(Icons.auto_awesome, size: 12, color: AppTheme.primaryLight),
                             label: const Text('Sub-task', style: TextStyle(fontSize: 10, color: AppTheme.primaryLight)),
-                            backgroundColor: AppTheme.primary.withOpacity(0.1),
+                            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                             padding: EdgeInsets.zero,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -665,7 +666,7 @@ class _TasksTabState extends State<TasksTab> {
                             avatar: const Icon(Icons.timer, size: 14, color: AppTheme.accentLight),
                             label: Text('${task.pomodoroMinutes}m',
                                 style: const TextStyle(fontSize: 10, color: AppTheme.accentLight)),
-                            backgroundColor: AppTheme.accent.withOpacity(0.15),
+                            backgroundColor: AppTheme.accent.withValues(alpha: 0.15),
                             padding: EdgeInsets.zero,
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
