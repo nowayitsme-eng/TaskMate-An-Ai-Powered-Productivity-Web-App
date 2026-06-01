@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_profile.dart';
 import 'activity_service.dart';
+import 'cache_service.dart';
 
 class GamificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final ActivityService _activityService = ActivityService();
+  final CacheService _cacheService = CacheService();
 
   static const int xpPerTask = 10;
 
@@ -14,11 +16,20 @@ class GamificationService {
 
   // ─── Profile Stream ───────────────────────────────────────────────────────
 
-  Stream<UserProfile> getUserProfile(String userId) {
-    return _profileRef(userId).snapshots().map((doc) {
+  Stream<UserProfile> getUserProfile(String userId) async* {
+    try {
+      final cachedProfile = await _cacheService.getCachedProfile(userId);
+      if (cachedProfile != null) {
+        yield cachedProfile;
+      }
+    } catch (_) {}
+
+    yield* _profileRef(userId).snapshots().map((doc) {
       if (!doc.exists) return const UserProfile();
-      return UserProfile.fromMap(doc.data() as Map<String, dynamic>);
-    });
+      final profile = UserProfile.fromMap(doc.data() as Map<String, dynamic>);
+      _cacheService.cacheProfile(userId, profile);
+      return profile;
+    }).handleError((error) {});
   }
 
   Future<void> updateDisplayName(String userId, String newName) async {
