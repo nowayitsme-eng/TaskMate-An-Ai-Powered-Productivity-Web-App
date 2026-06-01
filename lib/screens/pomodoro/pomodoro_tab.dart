@@ -19,13 +19,14 @@ class PomodoroTab extends StatefulWidget {
   State<PomodoroTab> createState() => _PomodoroTabState();
 }
 
-class _PomodoroTabState extends State<PomodoroTab> {
+class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
   Timer? _timer;
   int _timeLeft = 25 * 60;
   bool _isRunning = false;
   bool _isWorkTime = true;
   int _sessionCount = 0;
   int _totalWorkSecondsThisSession = 0; // Track work seconds for the focused task
+  DateTime? _lastPausedTime;
 
   final _workDurationController = TextEditingController(text: "25");
   final _breakDurationController = TextEditingController(text: "5");
@@ -38,7 +39,14 @@ class _PomodoroTabState extends State<PomodoroTab> {
   final ActivityService _activityService = ActivityService();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _flushFocusedTime(); // Save any remaining tracked time before disposing
     _timer?.cancel();
     _workDurationController.dispose();
@@ -46,6 +54,34 @@ class _PomodoroTabState extends State<PomodoroTab> {
     _longBreakDurationController.dispose();
     _sessionsBeforeLongBreakController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      if (_isRunning) {
+        _lastPausedTime = DateTime.now();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      if (_isRunning && _lastPausedTime != null) {
+        final now = DateTime.now();
+        final diffInSeconds = now.difference(_lastPausedTime!).inSeconds;
+        setState(() {
+          _timeLeft -= diffInSeconds;
+          if (_isWorkTime) {
+            _totalWorkSecondsThisSession += diffInSeconds;
+          }
+          if (_timeLeft < 0) _timeLeft = 0;
+        });
+        _lastPausedTime = null;
+        
+        // If the timer theoretically finished while in the background
+        if (_timeLeft == 0) {
+           // We will let the normal Timer tick handle the completion 
+           // on the next immediate tick.
+        }
+      }
+    }
   }
 
   /// Saves accumulated work seconds to the focused task in Firestore
