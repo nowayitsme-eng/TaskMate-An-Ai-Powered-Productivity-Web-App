@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/subject.dart';
 
 class GpaService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<SubjectModel>> getSubjects(String userId) {
+  Stream<List<SubjectModel>> getSubjects(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     return _db
         .collection('users')
         .doc(userId)
@@ -19,7 +21,8 @@ class GpaService {
     });
   }
 
-  Future<void> addSubject(String userId, SubjectModel subject) {
+  Future<void> addSubject(String providedUserId, SubjectModel subject) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final docId = DateTime.now().millisecondsSinceEpoch.toString();
     subject.id = docId;
     return _db.collection('users').doc(userId).set({
@@ -32,7 +35,8 @@ class GpaService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> deleteSubject(String userId, String subjectId) {
+  Future<void> deleteSubject(String providedUserId, String subjectId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     return _db.collection('users').doc(userId).update({
       'subjectsMap.$subjectId': FieldValue.delete(),
     });

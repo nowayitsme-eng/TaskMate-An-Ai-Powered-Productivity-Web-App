@@ -1,0 +1,14 @@
+{
+  "name": "taskmate-functions",
+  "description": "Cloud Functions for TaskMate",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1"
+  },
+  "private": true
+}

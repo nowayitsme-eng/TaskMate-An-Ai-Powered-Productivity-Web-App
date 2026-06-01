@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 import 'activity_service.dart';
 import 'cache_service.dart';
@@ -16,7 +17,8 @@ class GamificationService {
 
   // ─── Profile Stream ───────────────────────────────────────────────────────
 
-  Stream<UserProfile> getUserProfile(String userId) async* {
+  Stream<UserProfile> getUserProfile(String providedUserId) async* {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     try {
       final cachedProfile = await _cacheService.getCachedProfile(userId);
       if (cachedProfile != null) {
@@ -32,7 +34,8 @@ class GamificationService {
     }).handleError((error) {});
   }
 
-  Future<void> updateDisplayName(String userId, String newName) async {
+  Future<void> updateDisplayName(String providedUserId, String newName) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     await _profileRef(userId).set(
       {'displayName': newName},
       SetOptions(merge: true),
@@ -42,7 +45,8 @@ class GamificationService {
   // ─── XP Management ───────────────────────────────────────────────────────
 
   /// Adds XP atomically and recalculates level.
-  Future<void> addXp(String userId, int amount) async {
+  Future<void> addXp(String providedUserId, int amount) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     if (amount <= 0) return;
     final ref = _profileRef(userId);
 
@@ -71,12 +75,13 @@ class GamificationService {
 
   /// Checks applicable badge conditions and awards any not yet earned.
   Future<List<String>> checkAndAwardBadges(
-    String userId, {
+    String providedUserId, {
     required int totalCompleted,
     required int totalPomodoroMinutes,
     required DateTime actionTime,
     int consecutivePomodoros = 0,
   }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final ref = _profileRef(userId);
     final doc = await ref.get();
     final current =

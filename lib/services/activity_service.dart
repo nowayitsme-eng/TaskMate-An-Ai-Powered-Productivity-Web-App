@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 class ActivityService {
@@ -7,10 +8,11 @@ class ActivityService {
   String _dateKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
 
   Future<void> logActivity(
-    String userId, {
+    String providedUserId, {
     int tasksCompleted = 0,
     int pomodoroMinutes = 0,
   }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final key = _dateKey(DateTime.now());
     final ref = _db.collection('users').doc(userId);
 
@@ -29,7 +31,8 @@ class ActivityService {
 
   /// Fetches the full activity map for the past 365 days.
   /// Returns a map of `yyyy-MM-dd` → combined score (tasks*10 + pomodoro minutes).
-  Future<Map<String, int>> getActivityMap(String userId) async {
+  Future<Map<String, int>> getActivityMap(String providedUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     try {
       final doc = await _db.collection('users').doc(userId).get();
       if (!doc.exists) return {};

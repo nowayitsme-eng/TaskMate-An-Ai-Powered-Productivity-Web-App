@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/task.dart';
 
 class TaskService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Stream<List<TaskModel>> getTasks(String userId) {
+  Stream<List<TaskModel>> getTasks(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     return _db
         .collection('users')
         .doc(userId)
@@ -15,7 +17,8 @@ class TaskService {
             .toList());
   }
 
-  Future<String> addTask(String userId, TaskModel task) async {
+  Future<String> addTask(String providedUserId, TaskModel task) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final docRef = await _db.collection('users').doc(userId).collection('tasks').add({
       ...task.toMap(),
       'createdAt': FieldValue.serverTimestamp(),
@@ -23,7 +26,8 @@ class TaskService {
     return docRef.id;
   }
 
-  Future<void> updateTask(String userId, String taskId, Map<String, dynamic> updates) async {
+  Future<void> updateTask(String providedUserId, String taskId, Map<String, dynamic> updates) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final batch = _db.batch();
     final taskRef = _db.collection('users').doc(userId).collection('tasks').doc(taskId);
     batch.update(taskRef, updates);
@@ -45,7 +49,8 @@ class TaskService {
     await batch.commit();
   }
 
-  Future<void> deleteTask(String userId, String taskId) async {
+  Future<void> deleteTask(String providedUserId, String taskId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final batch = _db.batch();
     
     // Delete parent

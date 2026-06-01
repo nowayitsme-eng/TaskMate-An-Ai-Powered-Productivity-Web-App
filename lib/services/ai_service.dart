@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class AiService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -15,7 +17,8 @@ class AiService {
 
   // ─── AI Chat History Methods ──────────────────────────────────────────────
 
-  Stream<List<Map<String, dynamic>>> getChatHistory(String userId) {
+  Stream<List<Map<String, dynamic>>> getChatHistory(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     return _db
         .collection('users')
         .doc(userId)
@@ -26,7 +29,8 @@ class AiService {
             snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
   }
 
-  Future<void> saveMessage(String userId, String role, String content) {
+  Future<void> saveMessage(String providedUserId, String role, String content) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     return _db.collection('users').doc(userId).collection('chat').add({
       'role': role,
       'content': content,
@@ -34,7 +38,8 @@ class AiService {
     });
   }
 
-  Future<void> clearChat(String userId) async {
+  Future<void> clearChat(String providedUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final batch = _db.batch();
     final snapshot =
         await _db.collection('users').doc(userId).collection('chat').get();
@@ -74,6 +79,7 @@ class AiService {
     required String systemPrompt,
     required String userMessage,
   }) async {
+    await _checkRateLimit();
     final payload = {
       'system': [
         {'text': systemPrompt}
@@ -109,6 +115,7 @@ class AiService {
 
   Future<String> getAiResponse(List<Map<String, String>> history) async {
     try {
+      await _checkRateLimit();
       final messages = _formatMessages(history);
       final systemPrompts = _extractSystemPrompts(history);
 
@@ -206,38 +213,57 @@ Respond ONLY with a valid JSON array of strings. No explanation, no markdown, no
 
   /// Generates a list of flashcard Q-and-A pairs from study notes.
   /// Returns a List of Maps with keys 'question' and 'answer'.
-  Future<List<Map<String, String>>> generateFlashcards(String notes) async {
+  Future<List<Map<String, String>>> generateFlashcards(String text) async {
     const systemPrompt = '''
-You are a study assistant. Given study notes, generate 6 to 10 flashcards.
-Respond ONLY with a valid JSON array. Each item must have exactly two keys: "question" and "answer".
-No explanation, no markdown code block. Example:
-[{"question":"What is photosynthesis?","answer":"The process by which plants convert sunlight into food."}]
+You are a study assistant. Generate exactly 5 flashcards from the provided text.
+Respond ONLY with a valid JSON array of objects, where each object has a "front" and a "back".
+Example:
+[{"front": "What is Mitochondria?", "back": "The powerhouse of the cell."}]
+No other text, markdown, or explanation.
 ''';
 
     try {
       final raw = await _callBedrock(
         systemPrompt: systemPrompt,
-        userMessage: 'Generate flashcards from these notes:\n\n$notes',
+        userMessage: 'Generate flashcards from: "$text"',
       );
 
       final cleaned =
           raw.replaceAll(RegExp(r'```json|```', multiLine: true), '').trim();
 
       final List<dynamic> parsed = jsonDecode(cleaned);
-      return parsed
-          .map<Map<String, String>>((e) => {
-                'question': e['question']?.toString() ?? '',
-                'answer': e['answer']?.toString() ?? '',
-              })
-          .toList();
+      return parsed.map((e) {
+        final m = Map<String, dynamic>.from(e as Map);
+        return {
+          'front': m['front']?.toString() ?? 'Error parsing front',
+          'back': m['back']?.toString() ?? 'Error parsing back',
+        };
+      }).toList();
     } catch (e) {
       return [
-        {
-          'question': 'Could not generate flashcards',
-          'answer':
-              'Please try with more detailed notes (at least 100 words).',
-        },
+        {'front': 'Failed to generate flashcards', 'back': e.toString()}
       ];
+    }
+  }
+
+  // ─── Rate Limiter ─────────────────────────────────────────────────────────
+
+  Future<void> _checkRateLimit() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception("Unauthorized: Please log in.");
+    
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final ref = _db.collection('users').doc(userId).collection('limits').doc('ai_$today');
+    
+    final doc = await ref.get();
+    if (doc.exists) {
+      final count = doc.data()?['count'] ?? 0;
+      if (count >= 20) {
+        throw Exception("Rate limit exceeded. Maximum 20 AI requests per day.");
+      }
+      await ref.update({'count': FieldValue.increment(1)});
+    } else {
+      await ref.set({'count': 1, 'date': today});
     }
   }
 
