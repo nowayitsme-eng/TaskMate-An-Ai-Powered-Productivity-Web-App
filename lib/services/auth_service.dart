@@ -83,4 +83,36 @@ class AuthService extends ChangeNotifier {
     _user = _auth.currentUser;
     notifyListeners();
   }
+
+  Future<void> deleteAccount(String password) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) throw Exception("No user logged in");
+
+    try {
+      // 1. Re-authenticate (Required by Firebase before deletion)
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      // 2. Wipe Firestore Data (Tasks Collection)
+      final tasksSnapshot = await _db.collection('users').doc(user.uid).collection('tasks').get();
+      final batch = _db.batch();
+      for (var doc in tasksSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      // 3. Wipe User Document (Profile, Activity Heatmap, Subjects)
+      await _db.collection('users').doc(user.uid).delete();
+
+      // 4. Delete Auth Record
+      await user.delete();
+      _user = null;
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

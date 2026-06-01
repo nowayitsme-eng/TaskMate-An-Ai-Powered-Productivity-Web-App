@@ -61,6 +61,9 @@ class _ProfileTabState extends State<ProfileTab> {
               _buildBadgesSection(profile),
               const SizedBox(height: 24),
               _buildHeatmapSection(),
+              const SizedBox(height: 32),
+              _buildSettingsSection(),
+              const SizedBox(height: 32),
             ],
           ),
         );
@@ -392,6 +395,125 @@ class _ProfileTabState extends State<ProfileTab> {
           ],
         ),
       ),
+    );
+  }
+
+  // ─── Settings Section ─────────────────────────────────────────────────────
+
+  Widget _buildSettingsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4),
+          child: Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          color: AppTheme.danger.withValues(alpha: 0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: AppTheme.danger.withValues(alpha: 0.3)),
+          ),
+          child: ListTile(
+            leading: const Icon(Icons.delete_forever, color: AppTheme.dangerLight),
+            title: const Text('Delete Account', style: TextStyle(color: AppTheme.dangerLight, fontWeight: FontWeight.bold)),
+            subtitle: const Text('Permanently delete your account and all data', style: TextStyle(color: AppTheme.grayLight, fontSize: 12)),
+            trailing: const Icon(Icons.chevron_right, color: AppTheme.gray),
+            onTap: _showDeleteAccountDialog,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final passwordController = TextEditingController();
+    bool isLoading = false;
+    String errorMessage = '';
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.dark,
+              title: const Text('Delete Account', style: TextStyle(color: AppTheme.dangerLight)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'This action cannot be undone. All your tasks, XP, badges, and heatmap data will be permanently deleted.',
+                    style: TextStyle(color: AppTheme.grayLight, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Please enter your password to confirm:', style: TextStyle(fontSize: 13)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.05),
+                    ),
+                  ),
+                  if (errorMessage.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(errorMessage, style: const TextStyle(color: AppTheme.dangerLight, fontSize: 12)),
+                  ],
+                ],
+              ),
+              actions: [
+                if (!isLoading)
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel', style: TextStyle(color: AppTheme.grayLight)),
+                  ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final pwd = passwordController.text;
+                          if (pwd.isEmpty) {
+                            setState(() => errorMessage = 'Password is required');
+                            return;
+                          }
+
+                          setState(() {
+                            isLoading = true;
+                            errorMessage = '';
+                          });
+
+                          try {
+                            final auth = context.read<AuthService>();
+                            await auth.deleteAccount(pwd);
+                            if (ctx.mounted) {
+                              Navigator.pop(ctx);
+                              // User is logged out, the Auth stream will automatically redirect to Login.
+                            }
+                          } catch (e) {
+                            setState(() {
+                              isLoading = false;
+                              errorMessage = e.toString().contains('wrong-password')
+                                  ? 'Incorrect password.'
+                                  : 'Failed to delete account. Please try again.';
+                            });
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Delete Permanently'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
