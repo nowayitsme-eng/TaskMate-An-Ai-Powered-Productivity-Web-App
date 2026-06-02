@@ -291,7 +291,7 @@ class _VirtualPetState extends State<VirtualPet>
     return AnimatedBuilder(
       animation: Listenable.merge(
           [_bounceController, _glowController, _shakeController, _pulseController]),
-      builder: (_, __) {
+      builder: (context, child) {
         double dy = 0;
         double dx = 0;
         double scale = 1.0;
