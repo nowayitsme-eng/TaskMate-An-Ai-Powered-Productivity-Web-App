@@ -63,6 +63,7 @@ class _AiChatTabState extends State<AiChatTab> {
       await _aiService.saveMessage(userId, 'assistant', response);
       
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
@@ -92,9 +93,9 @@ class _AiChatTabState extends State<AiChatTab> {
         padding: const EdgeInsets.all(16),
         constraints: const BoxConstraints(maxWidth: 600),
         decoration: BoxDecoration(
-          color: isUser ? AppTheme.secondary.withOpacity(0.15) : AppTheme.primary.withOpacity(0.15),
+          color: isUser ? AppTheme.secondary.withValues(alpha: 0.15) : AppTheme.primary.withValues(alpha: 0.15),
           border: Border.all(
-            color: isUser ? AppTheme.secondary.withOpacity(0.3) : AppTheme.primary.withOpacity(0.3),
+            color: isUser ? AppTheme.secondary.withValues(alpha: 0.3) : AppTheme.primary.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
@@ -109,7 +110,7 @@ class _AiChatTabState extends State<AiChatTab> {
           styleSheet: MarkdownStyleSheet(
             p: TextStyle(color: isUser ? const Color(0xFFA7F3D0) : const Color(0xFFE9D5FF), fontSize: 16),
             codeblockDecoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             code: TextStyle(
@@ -155,9 +156,9 @@ class _AiChatTabState extends State<AiChatTab> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: userId == null
                       ? const Center(child: CircularProgressIndicator())
@@ -206,7 +207,7 @@ class _AiChatTabState extends State<AiChatTab> {
                       decoration: InputDecoration(
                         hintText: 'Ask me anything...',
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
+                        fillColor: Colors.white.withValues(alpha: 0.1),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: BorderSide.none,
