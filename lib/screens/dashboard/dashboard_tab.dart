@@ -187,7 +187,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: Column(
                       children: [
                         Icon(Icons.rocket_launch,
-                            size: 64, color: AppTheme.primary.withOpacity(0.5)),
+                            size: 64, color: AppTheme.primary.withValues(alpha: 0.5)),
                         const SizedBox(height: 16),
                         const Text('Your slate is clean!',
                             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -212,14 +212,14 @@ class _DashboardTabState extends State<DashboardTab> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primary.withOpacity(0.18),
-            AppTheme.accent.withOpacity(0.12),
+            AppTheme.primary.withValues(alpha: 0.18),
+            AppTheme.accent.withValues(alpha: 0.12),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -231,7 +231,7 @@ class _DashboardTabState extends State<DashboardTab> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.2),
+                  color: AppTheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.psychology, color: AppTheme.primaryLight, size: 20),
@@ -425,9 +425,9 @@ class _DashboardTabState extends State<DashboardTab> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Column(
           children: [
@@ -497,12 +497,12 @@ class _DashboardTabState extends State<DashboardTab> {
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.25), color.withOpacity(0.1)],
+            colors: [color.withValues(alpha: 0.25), color.withValues(alpha: 0.1)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -537,12 +537,12 @@ class _DashboardTabState extends State<DashboardTab> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isOverdue ? AppTheme.danger.withOpacity(0.08) : AppTheme.glass,
+        color: isOverdue ? AppTheme.danger.withValues(alpha: 0.08) : AppTheme.glass,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isOverdue
-              ? AppTheme.danger.withOpacity(0.4)
-              : Colors.white.withOpacity(0.08),
+              ? AppTheme.danger.withValues(alpha: 0.4)
+              : Colors.white.withValues(alpha: 0.08),
         ),
       ),
       child: Row(
@@ -636,7 +636,7 @@ class _ShimmerBarState extends State<_ShimmerBar>
         height: 14,
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(_anim.value),
+          color: Colors.white.withValues(alpha: _anim.value),
           borderRadius: BorderRadius.circular(7),
         ),
       ),
