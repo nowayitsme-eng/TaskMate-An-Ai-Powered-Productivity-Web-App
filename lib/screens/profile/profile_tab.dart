@@ -241,7 +241,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 tween: Tween<double>(begin: 0, end: profile.levelProgress),
                 duration: const Duration(milliseconds: 800),
                 curve: Curves.easeOutCubic,
-                builder: (_, value, __) => LinearProgressIndicator(
+                builder: (context, value, child) => LinearProgressIndicator(
                   value: value,
                   minHeight: 14,
                   backgroundColor: Colors.white.withValues(alpha: 0.06),
