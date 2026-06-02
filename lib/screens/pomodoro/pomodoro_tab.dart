@@ -275,10 +275,10 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppTheme.primary.withOpacity(0.25), AppTheme.secondary.withOpacity(0.15)],
+                      colors: [AppTheme.primary.withValues(alpha: 0.25), AppTheme.secondary.withValues(alpha: 0.15)],
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.4)),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     children: [
