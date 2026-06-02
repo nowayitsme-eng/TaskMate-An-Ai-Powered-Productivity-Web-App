@@ -104,7 +104,7 @@ class _GpaTabState extends State<GpaTab> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     isExpanded: true,
-                    value: _selectedGrade,
+                    initialValue: _selectedGrade,
                     decoration: const InputDecoration(hintText: 'Grade'),
                     dropdownColor: AppTheme.dark,
                     items: _gradeMap.keys.map((key) {
