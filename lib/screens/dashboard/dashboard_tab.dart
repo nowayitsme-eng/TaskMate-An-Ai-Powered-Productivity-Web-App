@@ -27,7 +27,6 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
-  final TaskService _taskService = TaskService();
   final AiService _aiService = AiService();
   final GamificationService _gamService = GamificationService();
   final CacheService _cacheService = CacheService();
