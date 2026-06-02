@@ -48,6 +48,11 @@ dependencies:
   shared_preferences: ^2.5.3
   timezone: ^0.9.4
   flutter_secure_storage: ^10.3.1
+  # Phase 7 — Calendar, Notifications, Pet
+  google_sign_in: ^6.2.2
+  googleapis: ^13.2.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.12
+  firebase_messaging: ^16.2.2
 
 dev_dependencies:
   flutter_test:

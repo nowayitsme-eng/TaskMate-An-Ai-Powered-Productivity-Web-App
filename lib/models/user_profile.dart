@@ -4,6 +4,7 @@ class UserProfile {
   final List<String> badges;
   final String? displayName;
   final DateTime? lastUpdated;
+  final DateTime? lastActiveDate;
 
   const UserProfile({
     this.xp = 0,
@@ -11,6 +12,7 @@ class UserProfile {
     this.badges = const [],
     this.displayName,
     this.lastUpdated,
+    this.lastActiveDate,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data) {
@@ -19,6 +21,9 @@ class UserProfile {
       level: (data['level'] as num?)?.toInt() ?? 1,
       badges: List<String>.from(data['badges'] ?? []),
       displayName: data['displayName'] as String?,
+      lastActiveDate: data['lastActiveDate'] != null
+          ? DateTime.tryParse(data['lastActiveDate'] as String)
+          : null,
     );
   }
 
@@ -27,6 +32,8 @@ class UserProfile {
         'level': level,
         'badges': badges,
         'displayName': displayName,
+        if (lastActiveDate != null)
+          'lastActiveDate': lastActiveDate!.toIso8601String(),
       };
 
   /// XP required to reach the next level.

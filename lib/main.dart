@@ -7,16 +7,21 @@ import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/messaging_service.dart';
+import 'widgets/notification_toast.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
   // Initialize local notifications (no-op on web)
   await NotificationService().init();
+
+  // Initialize FCM / web push messaging
+  await MessagingService().init();
 
   runApp(
     MultiProvider(
@@ -35,8 +40,12 @@ class TaskMateApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TaskMate',
-      theme: AppTheme.darkTheme, // We're using the dark theme consistently as requested
+      theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
+      // Wrap the entire app with NotificationOverlay so toasts work everywhere
+      builder: (context, child) => NotificationOverlay(
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: const AuthWrapper(),
     );
   }
@@ -48,7 +57,7 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = context.watch<AuthService>();
-    
+
     // Show loading indicator while checking auth state
     if (authService.isLoading) {
       return const Scaffold(

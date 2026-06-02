@@ -4,7 +4,9 @@ import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
 import '../../services/gamification_service.dart';
 import '../../services/activity_service.dart';
+import '../../services/calendar_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/notification_toast.dart';
 import '../../widgets/activity_heatmap.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -17,9 +19,13 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   final GamificationService _gamService = GamificationService();
   final ActivityService _activityService = ActivityService();
+  final CalendarService _calendarService = CalendarService();
 
   Map<String, int> _activityMap = {};
   bool _heatmapLoading = true;
+  bool _calendarConnecting = false;
+  bool _calendarSyncing = false;
+  int _lastSyncCount = -1;
 
   @override
   void initState() {
@@ -406,9 +412,14 @@ class _ProfileTabState extends State<ProfileTab> {
       children: [
         const Padding(
           padding: EdgeInsets.only(left: 4),
-          child: Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text('Settings',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(height: 12),
+        // Google Calendar Panel
+        _buildCalendarPanel(),
+        const SizedBox(height: 12),
+        // Danger Zone
         Card(
           color: AppTheme.danger.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
@@ -417,13 +428,189 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           child: ListTile(
             leading: const Icon(Icons.delete_forever, color: AppTheme.dangerLight),
-            title: const Text('Delete Account', style: TextStyle(color: AppTheme.dangerLight, fontWeight: FontWeight.bold)),
-            subtitle: const Text('Permanently delete your account and all data', style: TextStyle(color: AppTheme.grayLight, fontSize: 12)),
+            title: const Text('Delete Account',
+                style: TextStyle(
+                    color: AppTheme.dangerLight, fontWeight: FontWeight.bold)),
+            subtitle: const Text(
+                'Permanently delete your account and all data',
+                style: TextStyle(color: AppTheme.grayLight, fontSize: 12)),
             trailing: const Icon(Icons.chevron_right, color: AppTheme.gray),
             onTap: _showDeleteAccountDialog,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCalendarPanel() {
+    final isConnected = _calendarService.isConnected;
+    final userId = context.read<AuthService>().user?.uid ?? '';
+
+    return Card(
+      color: isConnected
+          ? const Color(0xFF34A853).withValues(alpha: 0.08)
+          : AppTheme.primary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isConnected
+              ? const Color(0xFF34A853).withValues(alpha: 0.35)
+              : AppTheme.primary.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isConnected
+                        ? const Color(0xFF34A853).withValues(alpha: 0.15)
+                        : AppTheme.primary.withValues(alpha: 0.15),
+                  ),
+                  child: Icon(
+                    Icons.calendar_month_rounded,
+                    color: isConnected
+                        ? const Color(0xFF34A853)
+                        : AppTheme.primaryLight,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Google Calendar',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(
+                        isConnected
+                            ? 'Two-way sync is active'
+                            : 'Connect for two-way sync',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppTheme.grayLight),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isConnected)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF34A853).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Active',
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF34A853),
+                            fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_lastSyncCount >= 0) ...([
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF34A853).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _lastSyncCount > 0
+                      ? '✅ Imported $_lastSyncCount new task${_lastSyncCount > 1 ? 's' : ''} from Calendar!'
+                      : '✅ Calendar is fully up to date!',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF34A853)),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ]),
+            Row(
+              children: [
+                if (!isConnected)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      icon: _calendarConnecting
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.login, size: 16),
+                      label: const Text('Connect Google Account'),
+                      onPressed: _calendarConnecting
+                          ? null
+                          : () async {
+                              setState(() => _calendarConnecting = true);
+                              final ok =
+                                  await _calendarService.connect();
+                              setState(() => _calendarConnecting = false);
+                              if (ok) {
+                                ToastController().showSuccess(
+                                  '📅 Calendar Connected!',
+                                  'Tasks will now sync to Google Calendar automatically.',
+                                );
+                              }
+                            },
+                    ),
+                  )
+                else ...([
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF34A853),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      icon: _calendarSyncing
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.sync, size: 16),
+                      label: const Text('Sync from Calendar'),
+                      onPressed: _calendarSyncing
+                          ? null
+                          : () async {
+                              setState(() => _calendarSyncing = true);
+                              final count = await _calendarService
+                                  .syncFromCalendar(userId);
+                              setState(() {
+                                _calendarSyncing = false;
+                                _lastSyncCount = count;
+                              });
+                            },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () async {
+                      await _calendarService.disconnect();
+                      setState(() => _lastSyncCount = -1);
+                    },
+                    child: const Text('Disconnect',
+                        style: TextStyle(
+                            color: AppTheme.gray, fontSize: 12)),
+                  ),
+                ]),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

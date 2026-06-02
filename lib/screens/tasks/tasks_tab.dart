@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/task.dart';
+import '../../models/user_profile.dart';
 import '../../services/task_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/ai_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/gamification_service.dart';
 import '../../services/activity_service.dart';
+import '../../services/messaging_service.dart';
 import '../../services/cache_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -588,10 +590,9 @@ class _TasksTabState extends State<TasksTab> {
                         if (val != null) {
                           _taskService.updateTask(userId, task.id, {'completed': val});
                           if (val && !task.completed) {
-                            // Capture context before async gaps
-                            final messenger = ScaffoldMessenger.of(context);
-                            
                             // Task just completed!
+                            MessagingService().notifyTaskCompleted(task.text);
+                            
                             await _activityService.logActivity(userId, tasksCompleted: 1);
                             await _gamService.addXp(userId, GamificationService.xpPerTask);
                             
@@ -607,12 +608,12 @@ class _TasksTabState extends State<TasksTab> {
                               actionTime: DateTime.now(),
                             );
                             
-                            if (earned.isNotEmpty && mounted) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text('🏆 You earned ${earned.length} new badge${earned.length > 1 ? 's' : ''}!'),
-                                  backgroundColor: AppTheme.secondary,
-                                ),
+                            if (earned.isNotEmpty) {
+                              MessagingService().notifyBadgeEarned(
+                                earned.map((id) => kAllBadges
+                                  .firstWhere((b) => b.id == id,
+                                      orElse: () => BadgeInfo(id: id, name: id, emoji: '🏆', description: ''))
+                                  .name).toList(),
                               );
                             }
                           }

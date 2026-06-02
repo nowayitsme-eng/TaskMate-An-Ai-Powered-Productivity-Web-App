@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/task.dart';
+import '../../models/user_profile.dart';
 import '../../services/task_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/gamification_service.dart';
 import '../../services/activity_service.dart';
+import '../../services/messaging_service.dart';
 import '../../theme/app_theme.dart';
 
 class PomodoroTab extends StatefulWidget {
@@ -158,11 +160,14 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
             }
             _isWorkTime = false;
 
-            // Notify break start
+            // Notify break start via local notification + in-app toast
             _notificationService.showPomodoroNotification(
-              title: isLongBreak ? 'Long Break Started' : 'Short Break Started',
-              body: 'Great job! Take a well-deserved break.',
+              title: isLongBreak ? '🧘 Long Break!' : '☕ Short Break!',
+              body: isLongBreak
+                  ? 'Great focus! Take a longer rest — you earned it!'
+                  : 'Great job! Take a short break.',
             );
+            MessagingService().notifyPomodoroEnd(isBreak: true);
 
             // Grant XP and log activity for the completed work session
             if (userId != null) {
@@ -173,20 +178,26 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
               // Check badges asynchronously without blocking UI
               _taskService.getTasks(userId).first.then((allTasks) {
                 final totalCompleted = allTasks.where((t) => t.completed).length;
-                final totalPomodoro = allTasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
-                _gamService.checkAndAwardBadges(
+                final totalPomodoro =
+                    allTasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
+                _gamService
+                    .checkAndAwardBadges(
                   userId,
                   totalCompleted: totalCompleted,
                   totalPomodoroMinutes: totalPomodoro,
                   actionTime: DateTime.now(),
                   consecutivePomodoros: _sessionCount,
-                ).then((earned) {
-                  if (earned.isNotEmpty && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('🏆 You earned ${earned.length} new badge${earned.length > 1 ? 's' : ''}!'),
-                        backgroundColor: AppTheme.secondary,
-                      ),
+                )
+                    .then((earned) {
+                  if (earned.isNotEmpty) {
+                    MessagingService().notifyBadgeEarned(
+                      earned
+                          .map((id) => kAllBadges
+                              .firstWhere((b) => b.id == id,
+                                  orElse: () => BadgeInfo(
+                                      id: id, name: id, emoji: '🏆', description: ''))
+                              .name)
+                          .toList(),
                     );
                   }
                 });
@@ -196,11 +207,12 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
             _timeLeft = (int.tryParse(_workDurationController.text) ?? 25) * 60;
             _isWorkTime = true;
 
-            // Notify work start
+            // Notify work session start
             _notificationService.showPomodoroNotification(
-              title: 'Break Over',
-              body: 'Ready to dive back in? Start the timer!',
+              title: '🍅 Work Session Started',
+              body: 'Break over — time to focus! You got this.',
             );
+            MessagingService().notifyPomodoroEnd(isBreak: false);
           }
         }
       });

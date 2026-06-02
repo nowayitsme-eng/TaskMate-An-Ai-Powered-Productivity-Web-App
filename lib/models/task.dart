@@ -5,9 +5,10 @@ class TaskModel {
   String? type;
   DateTime dueDate;
   bool completed;
-  int pomodoroMinutes; // Total pomodoro minutes spent on this task
-  String? parentTaskId; // If set, this task is a sub-task of the given parent
+  int pomodoroMinutes;
+  String? parentTaskId;
   bool isSubTask;
+  String? calendarEventId; // Google Calendar event ID for two-way sync
 
   TaskModel({
     required this.id,
@@ -19,6 +20,7 @@ class TaskModel {
     this.pomodoroMinutes = 0,
     this.parentTaskId,
     this.isSubTask = false,
+    this.calendarEventId,
   });
 
   factory TaskModel.fromMap(String id, Map<String, dynamic> data) {
@@ -32,6 +34,7 @@ class TaskModel {
       pomodoroMinutes: data['pomodoroMinutes'] ?? 0,
       parentTaskId: data['parentTaskId'],
       isSubTask: data['isSubTask'] ?? false,
+      calendarEventId: data['calendarEventId'],
     );
   }
 
@@ -45,6 +48,7 @@ class TaskModel {
       'pomodoroMinutes': pomodoroMinutes,
       'parentTaskId': parentTaskId,
       'isSubTask': isSubTask,
+      'calendarEventId': calendarEventId,
     };
   }
 }

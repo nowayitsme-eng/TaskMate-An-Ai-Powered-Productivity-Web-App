@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/gamification_service.dart';
 import '../../services/ai_service.dart';
 import '../../services/cache_service.dart';
+import '../../services/activity_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/virtual_pet.dart';
 
@@ -323,15 +324,35 @@ class _DashboardTabState extends State<DashboardTab> {
   // ─── Virtual Pet ──────────────────────────────────────────────────────────
 
   Widget _buildVirtualPet(List<TaskModel> tasks, DateTime now) {
+    final userId = context.read<AuthService>().user?.uid ?? '';
     final today = DateTime(now.year, now.month, now.day);
-    final overdue = tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).length;
+    final overdue =
+        tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).length;
     final completedToday = tasks.where((t) {
       if (!t.completed) return false;
       final due = t.dueDate;
-      return due.isAfter(today) && due.isBefore(today.add(const Duration(days: 1)));
+      return due.isAfter(today) &&
+          due.isBefore(today.add(const Duration(days: 1)));
     }).length;
 
-    return VirtualPet(overdueTasks: overdue, completedToday: completedToday);
+    return StreamBuilder<UserProfile>(
+      stream: _gamService.getUserProfile(userId),
+      builder: (context, profileSnap) {
+        final profile = profileSnap.data ?? const UserProfile();
+        return FutureBuilder<bool>(
+          future: ActivityService().hasSevenDayStreak(userId),
+          builder: (context, streakSnap) {
+            return VirtualPet(
+              overdueTasks: overdue,
+              completedToday: completedToday,
+              level: profile.level,
+              hasSevenDayStreak: streakSnap.data ?? false,
+              lastActiveDate: profile.lastActiveDate,
+            );
+          },
+        );
+      },
+    );
   }
 
   // ─── Existing widgets ─────────────────────────────────────────────────────
