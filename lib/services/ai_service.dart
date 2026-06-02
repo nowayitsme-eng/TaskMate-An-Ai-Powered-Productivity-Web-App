@@ -4,11 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AiService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // AWS Bedrock Configuration
-  final String _apiKey = const String.fromEnvironment('BEDROCK_API_KEY', defaultValue: 'YOUR_AWS_API_KEY');
+  final String _apiKey = dotenv.env['BEDROCK_API_KEY'] ?? 'YOUR_AWS_API_KEY';
   final String _region = 'us-east-1';
   final String _modelId = 'us.anthropic.claude-sonnet-4-6';
 
@@ -147,6 +149,16 @@ class AiService {
     }
   }
 
+  /// Helper to strictly extract a JSON array from AI output
+  String _extractJsonArray(String raw) {
+    final start = raw.indexOf('[');
+    final end = raw.lastIndexOf(']');
+    if (start == -1 || end == -1 || start > end) {
+      throw Exception('Failed to find JSON array in AI response');
+    }
+    return raw.substring(start, end + 1);
+  }
+
   Future<String> summarizeText(String text) async {
     try {
       final result = await _callBedrock(
@@ -191,13 +203,12 @@ Respond ONLY with a valid JSON array of strings. No explanation, no markdown, no
         userMessage: 'Break down this task: "$taskTitle"',
       );
 
-      // Strip any accidental markdown code fences
-      final cleaned =
-          raw.replaceAll(RegExp(r'```json|```', multiLine: true), '').trim();
+      final cleaned = _extractJsonArray(raw);
 
       final List<dynamic> parsed = jsonDecode(cleaned);
       return parsed.map((e) => e.toString()).toList();
     } catch (e) {
+      print('DecomposeTask Error: $e');
       // Fallback: generic sub-tasks
       return [
         'Research "$taskTitle"',
@@ -216,9 +227,9 @@ Respond ONLY with a valid JSON array of strings. No explanation, no markdown, no
   Future<List<Map<String, String>>> generateFlashcards(String text) async {
     const systemPrompt = '''
 You are a study assistant. Generate exactly 5 flashcards from the provided text.
-Respond ONLY with a valid JSON array of objects, where each object has a "front" and a "back".
+Respond ONLY with a valid JSON array of objects, where each object has a "question" and an "answer".
 Example:
-[{"front": "What is Mitochondria?", "back": "The powerhouse of the cell."}]
+[{"question": "What is Mitochondria?", "answer": "The powerhouse of the cell."}]
 No other text, markdown, or explanation.
 ''';
 
@@ -228,20 +239,20 @@ No other text, markdown, or explanation.
         userMessage: 'Generate flashcards from: "$text"',
       );
 
-      final cleaned =
-          raw.replaceAll(RegExp(r'```json|```', multiLine: true), '').trim();
+      final cleaned = _extractJsonArray(raw);
 
       final List<dynamic> parsed = jsonDecode(cleaned);
       return parsed.map((e) {
         final m = Map<String, dynamic>.from(e as Map);
         return {
-          'front': m['front']?.toString() ?? 'Error parsing front',
-          'back': m['back']?.toString() ?? 'Error parsing back',
+          'question': m['question']?.toString() ?? 'Error parsing question',
+          'answer': m['answer']?.toString() ?? 'Error parsing answer',
         };
       }).toList();
     } catch (e) {
+      print('GenerateFlashcards Error: $e');
       return [
-        {'front': 'Failed to generate flashcards', 'back': e.toString()}
+        {'question': 'Failed to generate flashcards', 'answer': e.toString()}
       ];
     }
   }
@@ -288,8 +299,7 @@ No explanation, no markdown code block. Example:
         userMessage: 'Create a quiz from these notes:\n\n$notes',
       );
 
-      final cleaned =
-          raw.replaceAll(RegExp(r'```json|```', multiLine: true), '').trim();
+      final cleaned = _extractJsonArray(raw);
 
       final List<dynamic> parsed = jsonDecode(cleaned);
       return parsed
@@ -300,6 +310,7 @@ No explanation, no markdown code block. Example:
               })
           .toList();
     } catch (e) {
+      print('GenerateQuiz Error: $e');
       return [
         {
           'question': 'Could not generate quiz',
