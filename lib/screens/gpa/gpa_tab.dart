@@ -152,8 +152,11 @@ class _GpaTabState extends State<GpaTab> {
 
     final double gpa = totalCredits > 0 ? totalGradePoints / totalCredits : 0.0;
     Color gpaColor = AppTheme.dangerLight;
-    if (gpa >= 3.5) gpaColor = AppTheme.secondaryLight;
-    else if (gpa >= 2.0) gpaColor = AppTheme.accentLight;
+    if (gpa >= 3.5) {
+      gpaColor = AppTheme.secondaryLight;
+    } else if (gpa >= 2.0) {
+      gpaColor = AppTheme.accentLight;
+    }
 
     return Column(
       children: [
