@@ -35,6 +35,11 @@ class _TasksTabState extends State<TasksTab> {
   String? _selectedType;
   DateTime? _dueDate;
   bool _isDecomposing = false;
+  int _selectedPriority = 0; // 0=Low, 1=Med, 2=High for new task form
+
+  // ─── Filter & Sort State ────────────────────────────────────────────────
+  String _filterBy = 'All'; // 'All', 'High', 'Medium', 'Low', 'Today'
+  String _sortBy = 'Date';  // 'Date', 'Priority'
 
   @override
   void dispose() {
@@ -61,6 +66,7 @@ class _TasksTabState extends State<TasksTab> {
       subject: _subjectController.text.trim().isEmpty ? null : _subjectController.text.trim(),
       type: _selectedType,
       dueDate: _dueDate!,
+      priority: _selectedPriority,
     );
 
     _taskService.addTask(userId, task).then((taskId) {
@@ -480,6 +486,43 @@ class _TasksTabState extends State<TasksTab> {
                 ),
               ],
             ),
+            // Priority selector
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('Priority: ', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
+                const SizedBox(width: 8),
+                ...[0, 1, 2].map((p) {
+                  const labels = ['🟢 Low', '🟡 Medium', '🔴 High'];
+                  final isSelected = _selectedPriority == p;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedPriority = p),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.primary.withValues(alpha: 0.25)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.primary
+                                : Colors.white.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Text(labels[p],
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: isSelected ? AppTheme.primaryLight : AppTheme.gray)),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
             // AI hint text
             const SizedBox(height: 8),
             Row(
@@ -495,6 +538,51 @@ class _TasksTabState extends State<TasksTab> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    const filters = ['All', 'Today', 'High', 'Medium', 'Low'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ...filters.map((f) {
+                final isSelected = _filterBy == f;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(f),
+                    selected: isSelected,
+                    onSelected: (_) => setState(() => _filterBy = f),
+                    selectedColor: AppTheme.primary.withValues(alpha: 0.25),
+                    checkmarkColor: AppTheme.primaryLight,
+                    labelStyle: TextStyle(
+                        color: isSelected ? AppTheme.primaryLight : AppTheme.gray,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                  ),
+                );
+              }),
+              const SizedBox(width: 8),
+              const VerticalDivider(width: 1),
+              const SizedBox(width: 12),
+              const Text('Sort:', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
+              const SizedBox(width: 8),
+              DropdownButton<String>(
+                value: _sortBy,
+                underline: const SizedBox(),
+                items: ['Date', 'Priority'].map((s) {
+                  return DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)));
+                }).toList(),
+                onChanged: (v) => setState(() => _sortBy = v ?? 'Date'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -524,13 +612,40 @@ class _TasksTabState extends State<TasksTab> {
   }
 
   Widget _buildListContent(String userId, List<TaskModel> tasks, {required bool isOffline}) {
-    tasks.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    // Apply filter
+    final today = DateTime.now();
+    List<TaskModel> filtered = tasks.where((t) {
+      switch (_filterBy) {
+        case 'Today':
+          return t.dueDate.year == today.year &&
+              t.dueDate.month == today.month &&
+              t.dueDate.day == today.day;
+        case 'High':
+          return t.priority == 2;
+        case 'Medium':
+          return t.priority == 1;
+        case 'Low':
+          return t.priority == 0;
+        default:
+          return true;
+      }
+    }).toList();
 
-    if (tasks.isEmpty) {
-      return const Center(
+    // Apply sort
+    if (_sortBy == 'Priority') {
+      filtered.sort((a, b) => b.priority.compareTo(a.priority));
+    } else {
+      filtered.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    }
+
+    if (filtered.isEmpty) {
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32.0),
-          child: Text('No tasks yet. Add one above!', style: TextStyle(color: AppTheme.gray)),
+          padding: const EdgeInsets.all(32.0),
+          child: Text(
+            _filterBy == 'All' ? 'No tasks yet. Add one above!' : 'No tasks match this filter.',
+            style: const TextStyle(color: AppTheme.gray),
+          ),
         ),
       );
     }
@@ -558,9 +673,9 @@ class _TasksTabState extends State<TasksTab> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: tasks.length,
+          itemCount: filtered.length,
           itemBuilder: (context, index) {
-            final task = tasks[index];
+            final task = filtered[index];
             final isOverdue = task.dueDate.isBefore(DateTime.now()) && !task.completed;
 
             return Padding(
@@ -727,7 +842,9 @@ class _TasksTabState extends State<TasksTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTaskForm(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _buildFilterBar(),
+          const SizedBox(height: 16),
           _buildTaskList(),
         ],
       ),

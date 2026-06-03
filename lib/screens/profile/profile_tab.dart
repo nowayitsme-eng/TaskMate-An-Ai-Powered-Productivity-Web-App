@@ -8,6 +8,9 @@ import '../../services/calendar_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/notification_toast.dart';
 import '../../widgets/activity_heatmap.dart';
+import 'settings_screen.dart';
+import 'change_password_modal.dart';
+import 'analytics_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -414,6 +417,69 @@ class _ProfileTabState extends State<ProfileTab> {
           padding: EdgeInsets.only(left: 4),
           child: Text('Settings',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        ),
+        const SizedBox(height: 12),
+        // App Settings button
+        Card(
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.tune_rounded, color: AppTheme.primaryLight, size: 20),
+            ),
+            title: const Text('App Settings', style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Theme, Pomodoro timers, notifications'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Change Password button
+        Card(
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.accent.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.lock_reset, color: AppTheme.accentLight, size: 20),
+            ),
+            title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('Update your account password securely'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog(
+              context: context,
+              builder: (_) => const ChangePasswordModal(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Study Analytics button
+        Card(
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.secondary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.bar_chart_rounded, color: AppTheme.secondaryLight, size: 20),
+            ),
+            title: const Text('Study Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: const Text('View time spent per subject with charts'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         // Google Calendar Panel

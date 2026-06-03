@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/task.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/offline_banner.dart';
 
 import '../dashboard/dashboard_tab.dart';
 import '../tasks/tasks_tab.dart';
@@ -66,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
       const ProfileTab(),
     ];
 
-    return Scaffold(
+    return OfflineBanner(
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('TaskMate', style: TextStyle(fontWeight: FontWeight.w900)),
         backgroundColor: Colors.transparent,
@@ -118,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Study Hub'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
+      ),
       ),
     );
   }

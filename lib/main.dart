@@ -6,6 +6,7 @@ import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'services/auth_service.dart';
+import 'services/settings_provider.dart';
 import 'services/notification_service.dart';
 import 'services/messaging_service.dart';
 import 'widgets/notification_toast.dart';
@@ -20,6 +21,10 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Load saved settings before rendering
+  final settings = SettingsProvider();
+  await settings.load();
+
   // Initialize local notifications (no-op on web)
   await NotificationService().init();
 
@@ -30,6 +35,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider.value(value: settings),
       ],
       child: const TaskMateApp(),
     ),
@@ -41,11 +47,13 @@ class TaskMateApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     return MaterialApp(
       title: 'TaskMate',
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: settings.themeMode,
       debugShowCheckedModeBanner: false,
-      // Wrap the entire app with NotificationOverlay so toasts work everywhere
       builder: (context, child) => NotificationOverlay(
         child: child ?? const SizedBox.shrink(),
       ),

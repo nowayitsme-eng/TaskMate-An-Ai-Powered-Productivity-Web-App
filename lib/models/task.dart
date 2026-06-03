@@ -1,3 +1,31 @@
+/// Priority levels for tasks.
+/// 0 = Low, 1 = Medium, 2 = High
+enum TaskPriority { low, medium, high }
+
+extension TaskPriorityExtension on TaskPriority {
+  String get label {
+    switch (this) {
+      case TaskPriority.low:
+        return 'Low';
+      case TaskPriority.medium:
+        return 'Medium';
+      case TaskPriority.high:
+        return 'High';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case TaskPriority.low:
+        return '🟢';
+      case TaskPriority.medium:
+        return '🟡';
+      case TaskPriority.high:
+        return '🔴';
+    }
+  }
+}
+
 class TaskModel {
   String id;
   String text;
@@ -9,6 +37,7 @@ class TaskModel {
   String? parentTaskId;
   bool isSubTask;
   String? calendarEventId; // Google Calendar event ID for two-way sync
+  int priority; // 0=Low, 1=Medium, 2=High
 
   TaskModel({
     required this.id,
@@ -21,6 +50,7 @@ class TaskModel {
     this.parentTaskId,
     this.isSubTask = false,
     this.calendarEventId,
+    this.priority = 0,
   });
 
   factory TaskModel.fromMap(String id, Map<String, dynamic> data) {
@@ -35,6 +65,7 @@ class TaskModel {
       parentTaskId: data['parentTaskId'],
       isSubTask: data['isSubTask'] ?? false,
       calendarEventId: data['calendarEventId'],
+      priority: (data['priority'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -49,6 +80,9 @@ class TaskModel {
       'parentTaskId': parentTaskId,
       'isSubTask': isSubTask,
       'calendarEventId': calendarEventId,
+      'priority': priority,
     };
   }
+
+  TaskPriority get priorityEnum => TaskPriority.values[priority.clamp(0, 2)];
 }

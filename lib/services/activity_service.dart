@@ -11,22 +11,29 @@ class ActivityService {
     String providedUserId, {
     int tasksCompleted = 0,
     int pomodoroMinutes = 0,
+    String? subject, // optional: track which subject the minutes belong to
   }) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final key = _dateKey(DateTime.now());
     final ref = _db.collection('users').doc(userId);
 
-    await ref.set(
-      {
-        'activityMap': {
-          key: {
-            'tasksCompleted': FieldValue.increment(tasksCompleted),
-            'pomodoroMinutes': FieldValue.increment(pomodoroMinutes),
-          }
+    final Map<String, dynamic> update = {
+      'activityMap': {
+        key: {
+          'tasksCompleted': FieldValue.increment(tasksCompleted),
+          'pomodoroMinutes': FieldValue.increment(pomodoroMinutes),
         }
-      },
-      SetOptions(merge: true),
-    );
+      }
+    };
+
+    // Track per-subject pomodoro minutes for analytics
+    if (subject != null && subject.isNotEmpty && pomodoroMinutes > 0) {
+      update['subjectMinutes'] = {
+        subject: FieldValue.increment(pomodoroMinutes),
+      };
+    }
+
+    await ref.set(update, SetOptions(merge: true));
   }
 
   /// Fetches the full activity map for the past 365 days.
@@ -49,6 +56,21 @@ class ActivityService {
         }
       });
       return map;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Fetches per-subject pomodoro minutes for analytics charts.
+  /// Returns a map of subjectName → total minutes.
+  Future<Map<String, int>> getSubjectMinutes(String providedUserId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    try {
+      final doc = await _db.collection('users').doc(userId).get();
+      if (!doc.exists) return {};
+      final data = doc.data() as Map<String, dynamic>;
+      final subjectData = data['subjectMinutes'] as Map<String, dynamic>? ?? {};
+      return subjectData.map((k, v) => MapEntry(k, (v as num).toInt()));
     } catch (_) {
       return {};
     }
