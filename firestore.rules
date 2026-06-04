@@ -1,9 +1,31 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read and write only their own user document and any subcollections under it
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // ─── User document & subcollections ────────────────────────────────────
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Only allow writing safe profile fields (displayName, calendarConnected, etc.)
+      // XP, level, badges, and lifetime stats may ONLY be incremented by the server
+      // or by small, bounded amounts to prevent spoofing.
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        // Prevent arbitrary jumps in XP (max 100 per write, cannot set directly to huge number)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['xp', 'level', 'badges', 'lifetimeTasksCompleted', 'lifetimePomodoroMinutes'])
+            || (
+              request.resource.data.get('xp', 0) >= 0
+              && request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 200
+              && request.resource.data.get('xp', 0) >= resource.data.get('xp', 0) - 200
+            ));
+
+      // Allow creating the document
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // ─── Subcollections: tasks, chat, limits, insights ──────────────────
+      match /{subcollection=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
   }
 }

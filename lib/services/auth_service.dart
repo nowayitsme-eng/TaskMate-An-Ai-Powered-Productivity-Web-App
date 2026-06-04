@@ -96,13 +96,16 @@ class AuthService extends ChangeNotifier {
       );
       await user.reauthenticateWithCredential(credential);
 
-      // 2. Wipe Firestore Data (Tasks Collection)
-      final tasksSnapshot = await _db.collection('users').doc(user.uid).collection('tasks').get();
-      final batch = _db.batch();
-      for (var doc in tasksSnapshot.docs) {
-        batch.delete(doc.reference);
+      // 2. Wipe Firestore Data (Tasks Collection) — batched in chunks of 500
+      var tasksSnapshot = await _db.collection('users').doc(user.uid).collection('tasks').limit(500).get();
+      while (tasksSnapshot.docs.isNotEmpty) {
+        final batch = _db.batch();
+        for (var doc in tasksSnapshot.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+        tasksSnapshot = await _db.collection('users').doc(user.uid).collection('tasks').limit(500).get();
       }
-      await batch.commit();
 
       // 3. Wipe User Document (Profile, Activity Heatmap, Subjects)
       await _db.collection('users').doc(user.uid).delete();

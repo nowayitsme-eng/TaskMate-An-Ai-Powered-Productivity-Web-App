@@ -60,6 +60,20 @@ class _TasksTabState extends State<TasksTab> {
       return;
     }
 
+    // Fix 4: Enforce character limits to prevent DoS via massive input
+    if (_textController.text.trim().length > 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task title must be 200 characters or fewer.')),
+      );
+      return;
+    }
+    if (_subjectController.text.trim().length > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Subject must be 50 characters or fewer.')),
+      );
+      return;
+    }
+
     final task = TaskModel(
       id: '',
       text: _textController.text.trim(),
@@ -566,21 +580,23 @@ class _TasksTabState extends State<TasksTab> {
                   ),
                 );
               }),
-              const SizedBox(width: 8),
-              const VerticalDivider(width: 1),
-              const SizedBox(width: 12),
-              const Text('Sort:', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
-              const SizedBox(width: 8),
-              DropdownButton<String>(
-                value: _sortBy,
-                underline: const SizedBox(),
-                items: ['Date', 'Priority'].map((s) {
-                  return DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)));
-                }).toList(),
-                onChanged: (v) => setState(() => _sortBy = v ?? 'Date'),
-              ),
             ],
           ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text('Sort by:', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
+            const SizedBox(width: 8),
+            DropdownButton<String>(
+              value: _sortBy,
+              underline: const SizedBox(),
+              items: ['Date', 'Priority'].map((s) {
+                return DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)));
+              }).toList(),
+              onChanged: (v) => setState(() => _sortBy = v ?? 'Date'),
+            ),
+          ],
         ),
       ],
     );
@@ -710,16 +726,11 @@ class _TasksTabState extends State<TasksTab> {
                             
                             await _activityService.logActivity(userId, tasksCompleted: 1);
                             await _gamService.addXp(userId, GamificationService.xpPerTask);
+                            await _gamService.updateLifetimeStats(userId, tasksDelta: 1);
                             
                             // Check badges
-                            final allTasks = await _taskService.getTasks(userId).first;
-                            final totalCompleted = allTasks.where((t) => t.completed).length + 1;
-                            final totalPomodoro = allTasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
-                            
                             final earned = await _gamService.checkAndAwardBadges(
                               userId,
-                              totalCompleted: totalCompleted,
-                              totalPomodoroMinutes: totalPomodoro,
                               actionTime: DateTime.now(),
                             );
                             
@@ -731,6 +742,11 @@ class _TasksTabState extends State<TasksTab> {
                                   .name).toList(),
                               );
                             }
+                          } else if (!val && task.completed) {
+                            // Task unchecked, reverse rewards!
+                            await _activityService.logActivity(userId, tasksCompleted: -1);
+                            await _gamService.addXp(userId, -GamificationService.xpPerTask);
+                            await _gamService.updateLifetimeStats(userId, tasksDelta: -1);
                           }
                         }
                       },

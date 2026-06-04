@@ -6,13 +6,11 @@ import 'settings_service.dart';
 class SettingsProvider extends ChangeNotifier {
   final SettingsService _service = SettingsService();
 
-  ThemeMode _themeMode = ThemeMode.dark;
   int _pomodoroWork = 25;
   int _pomodoroBreak = 5;
   int _pomodoroLongBreak = 15;
   bool _soundEnabled = true;
 
-  ThemeMode get themeMode => _themeMode;
   int get pomodoroWork => _pomodoroWork;
   int get pomodoroBreak => _pomodoroBreak;
   int get pomodoroLongBreak => _pomodoroLongBreak;
@@ -20,8 +18,6 @@ class SettingsProvider extends ChangeNotifier {
 
   /// Call once at app startup to restore saved preferences.
   Future<void> load() async {
-    final themeInt = await _service.getThemeMode();
-    _themeMode = _intToThemeMode(themeInt);
     _pomodoroWork = await _service.getPomodoroWork();
     _pomodoroBreak = await _service.getPomodoroBreak();
     _pomodoroLongBreak = await _service.getPomodoroLongBreak();
@@ -30,12 +26,6 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   // ─── Setters ───────────────────────────────────────────────────────────────
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    _themeMode = mode;
-    await _service.setThemeMode(_themeModeToInt(mode));
-    notifyListeners();
-  }
 
   Future<void> setPomodoroWork(int minutes) async {
     _pomodoroWork = minutes;
@@ -59,19 +49,5 @@ class SettingsProvider extends ChangeNotifier {
     _soundEnabled = value;
     await _service.setSoundEnabled(value);
     notifyListeners();
-  }
-
-  // ─── Helpers ───────────────────────────────────────────────────────────────
-
-  ThemeMode _intToThemeMode(int v) {
-    if (v == 0) return ThemeMode.system;
-    if (v == 1) return ThemeMode.light;
-    return ThemeMode.dark;
-  }
-
-  int _themeModeToInt(ThemeMode m) {
-    if (m == ThemeMode.system) return 0;
-    if (m == ThemeMode.light) return 1;
-    return 2;
   }
 }

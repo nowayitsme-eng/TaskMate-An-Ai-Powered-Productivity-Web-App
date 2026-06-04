@@ -10,12 +10,7 @@ class SettingsService {
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
-  // ─── Theme ─────────────────────────────────────────────────────────────────
-
-  /// 0 = system, 1 = light, 2 = dark
-  Future<int> getThemeMode() async => (await _prefs).getInt(_keyTheme) ?? 2;
-  Future<void> setThemeMode(int value) async =>
-      (await _prefs).setInt(_keyTheme, value);
+  // ─── Theme removed ───
 
   // ─── Pomodoro ──────────────────────────────────────────────────────────────
 

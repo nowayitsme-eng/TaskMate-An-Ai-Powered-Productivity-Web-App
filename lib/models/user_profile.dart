@@ -5,6 +5,8 @@ class UserProfile {
   final String? displayName;
   final DateTime? lastUpdated;
   final DateTime? lastActiveDate;
+  final int lifetimeTasksCompleted;
+  final int lifetimePomodoroMinutes;
 
   const UserProfile({
     this.xp = 0,
@@ -13,6 +15,8 @@ class UserProfile {
     this.displayName,
     this.lastUpdated,
     this.lastActiveDate,
+    this.lifetimeTasksCompleted = 0,
+    this.lifetimePomodoroMinutes = 0,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data) {
@@ -24,6 +28,8 @@ class UserProfile {
       lastActiveDate: data['lastActiveDate'] != null
           ? DateTime.tryParse(data['lastActiveDate'] as String)
           : null,
+      lifetimeTasksCompleted: (data['lifetimeTasksCompleted'] as num?)?.toInt() ?? 0,
+      lifetimePomodoroMinutes: (data['lifetimePomodoroMinutes'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -32,6 +38,8 @@ class UserProfile {
         'level': level,
         'badges': badges,
         'displayName': displayName,
+        'lifetimeTasksCompleted': lifetimeTasksCompleted,
+        'lifetimePomodoroMinutes': lifetimePomodoroMinutes,
         if (lastActiveDate != null)
           'lastActiveDate': lastActiveDate!.toIso8601String(),
       };

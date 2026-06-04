@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
@@ -107,6 +108,16 @@ class _AiChatTabState extends State<AiChatTab> {
         child: MarkdownBody(
           data: msg['content'] ?? '',
           selectable: true,
+          // Fix 8: Sanitize links — only allow safe http/https URLs
+          onTapLink: (text, href, title) async {
+            if (href == null) return;
+            final uri = Uri.tryParse(href);
+            if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            }
+          },
           styleSheet: MarkdownStyleSheet(
             p: TextStyle(color: isUser ? const Color(0xFFA7F3D0) : const Color(0xFFE9D5FF), fontSize: 16),
             codeblockDecoration: BoxDecoration(

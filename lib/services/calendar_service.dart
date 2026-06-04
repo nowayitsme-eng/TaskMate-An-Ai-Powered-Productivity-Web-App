@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -26,6 +27,10 @@ class CalendarService {
 
   gcal.CalendarApi? _calendarApi;
   bool _isConnected = false;
+
+  // Fix 9: Debounce calendar updates to prevent API rate-limiting
+  // Maps task ID → pending debounce timer
+  final Map<String, Timer> _debounceTimers = {};
 
   bool get isConnected => _isConnected;
 
@@ -107,13 +112,18 @@ class CalendarService {
   }
 
   /// Updates the existing Google Calendar event linked to the task.
-  Future<void> updateCalendarEvent(TaskModel task) async {
+  /// Debounced: rapid consecutive calls for the same task collapse into one.
+  void updateCalendarEvent(TaskModel task) {
     if (_calendarApi == null || task.calendarEventId == null) return;
-    try {
-      final event = _taskToEvent(task);
-      await _calendarApi!.events
-          .update(event, 'primary', task.calendarEventId!);
-    } catch (_) {}
+    // Cancel any pending update for this task
+    _debounceTimers[task.id]?.cancel();
+    _debounceTimers[task.id] = Timer(const Duration(seconds: 2), () async {
+      _debounceTimers.remove(task.id);
+      try {
+        final event = _taskToEvent(task);
+        await _calendarApi!.events.update(event, 'primary', task.calendarEventId!);
+      } catch (_) {}
+    });
   }
 
   /// Deletes the Google Calendar event linked to the task.

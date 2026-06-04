@@ -44,10 +44,10 @@ class GamificationService {
 
   // ─── XP Management ───────────────────────────────────────────────────────
 
-  /// Adds XP atomically and recalculates level.
+  /// Adds or removes XP atomically and recalculates level.
   Future<void> addXp(String providedUserId, int amount) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
-    if (amount <= 0) return;
+    if (amount == 0) return;
     final ref = _profileRef(userId);
 
     await _db.runTransaction((tx) async {
@@ -55,7 +55,7 @@ class GamificationService {
       final current =
           doc.exists ? UserProfile.fromMap(doc.data() as Map<String, dynamic>) : const UserProfile();
 
-      final newXp = current.xp + amount;
+      final newXp = (current.xp + amount).clamp(0, double.maxFinite.toInt());
       // Level thresholds: 100 XP per level (cumulative)
       final newLevel = (newXp / 100).floor() + 1;
 
@@ -71,13 +71,44 @@ class GamificationService {
     });
   }
 
+  // ─── Lifetime Stats ───────────────────────────────────────────────────────
+
+  Future<void> updateLifetimeStats(
+    String providedUserId, {
+    int tasksDelta = 0,
+    int pomodoroDelta = 0,
+  }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    if (tasksDelta == 0 && pomodoroDelta == 0) return;
+
+    final ref = _profileRef(userId);
+
+    // Fix 6: Use a transaction to safely clamp values to >= 0 (prevents negative stats)
+    await _db.runTransaction((tx) async {
+      final doc = await tx.get(ref);
+      final current = doc.exists
+          ? UserProfile.fromMap(doc.data() as Map<String, dynamic>)
+          : const UserProfile();
+
+      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(0, double.maxFinite.toInt());
+      final newPomodoro = (current.lifetimePomodoroMinutes + pomodoroDelta).clamp(0, double.maxFinite.toInt());
+
+      tx.set(
+        ref,
+        {
+          if (tasksDelta != 0) 'lifetimeTasksCompleted': newTasks,
+          if (pomodoroDelta != 0) 'lifetimePomodoroMinutes': newPomodoro,
+        },
+        SetOptions(merge: true),
+      );
+    });
+  }
+
   // ─── Badge Management ─────────────────────────────────────────────────────
 
   /// Checks applicable badge conditions and awards any not yet earned.
   Future<List<String>> checkAndAwardBadges(
     String providedUserId, {
-    required int totalCompleted,
-    required int totalPomodoroMinutes,
     required DateTime actionTime,
     int consecutivePomodoros = 0,
   }) async {
@@ -91,13 +122,13 @@ class GamificationService {
     final toAward = <String>[];
 
     // Evaluate each badge condition
-    if (!already.contains('first_task') && totalCompleted >= 1) {
+    if (!already.contains('first_task') && current.lifetimeTasksCompleted >= 1) {
       toAward.add('first_task');
     }
-    if (!already.contains('century') && totalCompleted >= 100) {
+    if (!already.contains('century') && current.lifetimeTasksCompleted >= 100) {
       toAward.add('century');
     }
-    if (!already.contains('marathon') && totalPomodoroMinutes >= 500) {
+    if (!already.contains('marathon') && current.lifetimePomodoroMinutes >= 500) {
       toAward.add('marathon');
     }
     if (!already.contains('deep_focus') && consecutivePomodoros >= 4) {

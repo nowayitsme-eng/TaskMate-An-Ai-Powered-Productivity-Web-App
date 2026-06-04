@@ -50,9 +50,7 @@ class TaskMateApp extends StatelessWidget {
     final settings = context.watch<SettingsProvider>();
     return MaterialApp(
       title: 'TaskMate',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: settings.themeMode,
+      theme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
       builder: (context, child) => NotificationOverlay(
         child: child ?? const SizedBox.shrink(),

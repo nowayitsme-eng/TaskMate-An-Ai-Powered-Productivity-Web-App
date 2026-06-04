@@ -142,7 +142,7 @@ class _DashboardTabState extends State<DashboardTab> {
               const SizedBox(height: 24),
 
               // Stats Row
-              _buildStatsRow(tasks, overdueTasks, completedTasks),
+              _buildStatsRow(tasks, overdueTasks, context),
               const SizedBox(height: 24),
 
               // Quick Actions
@@ -404,19 +404,26 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   Widget _buildStatsRow(
-      List<TaskModel> all, List<TaskModel> overdue, List<TaskModel> completed) {
-    final totalFocusMinutes = all.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
-
-    return Row(
-      children: [
-        _buildStatCard('Total', '${all.length}', Icons.list_alt, AppTheme.primaryLight),
-        const SizedBox(width: 12),
-        _buildStatCard('Overdue', '${overdue.length}', Icons.warning_amber, AppTheme.dangerLight),
-        const SizedBox(width: 12),
-        _buildStatCard('Done', '${completed.length}', Icons.check_circle, AppTheme.secondaryLight),
-        const SizedBox(width: 12),
-        _buildStatCard('Focus', '${totalFocusMinutes}m', Icons.timer, AppTheme.accentLight),
-      ],
+      List<TaskModel> all, List<TaskModel> overdue, BuildContext context) {
+    final userId = context.read<AuthService>().user?.uid;
+    
+    return StreamBuilder<UserProfile>(
+      stream: userId != null ? _gamService.getUserProfile(userId) : null,
+      builder: (context, snapshot) {
+        final profile = snapshot.data ?? const UserProfile();
+        
+        return Row(
+          children: [
+            _buildStatCard('Total', '${all.length}', Icons.list_alt, AppTheme.primaryLight),
+            const SizedBox(width: 12),
+            _buildStatCard('Overdue', '${overdue.length}', Icons.warning_amber, AppTheme.dangerLight),
+            const SizedBox(width: 12),
+            _buildStatCard('Done', '${profile.lifetimeTasksCompleted}', Icons.check_circle, AppTheme.secondaryLight),
+            const SizedBox(width: 12),
+            _buildStatCard('Focus', '${profile.lifetimePomodoroMinutes}m', Icons.timer, AppTheme.accentLight),
+          ],
+        );
+      },
     );
   }
 

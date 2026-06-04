@@ -38,6 +38,12 @@ class _SummarizerTabState extends State<SummarizerTab> {
       return;
     }
 
+    // Fix 7: Hard cap to prevent OOM and runaway AI costs
+    if (text.length > 12000) {
+      _showSnack('Text is too long (max 12,000 characters). Please trim your notes.');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {

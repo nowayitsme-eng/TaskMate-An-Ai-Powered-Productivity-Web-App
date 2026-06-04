@@ -174,17 +174,10 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
               final minutesWorked = int.tryParse(_workDurationController.text) ?? 25;
               _activityService.logActivity(userId, pomodoroMinutes: minutesWorked);
               _gamService.addXp(userId, minutesWorked);
-              
-              // Check badges asynchronously without blocking UI
-              _taskService.getTasks(userId).first.then((allTasks) {
-                final totalCompleted = allTasks.where((t) => t.completed).length;
-                final totalPomodoro =
-                    allTasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
+              _gamService.updateLifetimeStats(userId, pomodoroDelta: minutesWorked).then((_) {
                 _gamService
                     .checkAndAwardBadges(
                   userId,
-                  totalCompleted: totalCompleted,
-                  totalPomodoroMinutes: totalPomodoro,
                   actionTime: DateTime.now(),
                   consecutivePomodoros: _sessionCount,
                 )

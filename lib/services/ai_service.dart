@@ -1,21 +1,18 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_functions/firebase_functions.dart';
 import 'package:intl/intl.dart';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AiService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // AWS Bedrock Configuration
-  final String _apiKey = dotenv.env['BEDROCK_API_KEY'] ?? 'YOUR_AWS_API_KEY';
-  final String _region = 'us-east-1';
-  final String _modelId = 'us.anthropic.claude-sonnet-4-6';
+  // Maximum text length allowed to be sent to the AI (prevents OOM/cost drain)
+  static const int _maxInputLength = 12000;
 
-  String get _apiUrl =>
-      'https://bedrock-runtime.$_region.amazonaws.com/model/${Uri.encodeComponent(_modelId)}/converse';
+  // Firebase Cloud Function proxy (keeps API key server-side)
+  final _callBedrockFn = FirebaseFunctions.instanceFor(region: 'us-east-1')
+      .httpsCallable('callBedrock');
 
   // ─── AI Chat History Methods ──────────────────────────────────────────────
 
@@ -42,13 +39,16 @@ class AiService {
 
   Future<void> clearChat(String providedUserId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
-    final batch = _db.batch();
-    final snapshot =
-        await _db.collection('users').doc(userId).collection('chat').get();
-    for (var doc in snapshot.docs) {
-      batch.delete(doc.reference);
+    // Delete in batches of 100 to avoid loading all messages at once (Fix 3)
+    var snapshot = await _db.collection('users').doc(userId).collection('chat').limit(100).get();
+    while (snapshot.docs.isNotEmpty) {
+      final batch = _db.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      snapshot = await _db.collection('users').doc(userId).collection('chat').limit(100).get();
     }
-    await batch.commit();
   }
 
   // ─── Helpers for Converse API Format ─────────────────────────────────────
@@ -76,40 +76,27 @@ class AiService {
     return systemMessages.map((msg) => {'text': msg['content']}).toList();
   }
 
-  /// Low-level call to the Bedrock Converse API with a single user message + system prompt.
+  /// Low-level call to the Bedrock Converse API via secure Cloud Function.
+  /// Fix 1: API key never leaves the server. Fix 9: Input clamped to prevent cost drain.
   Future<String> _callBedrock({
     required String systemPrompt,
     required String userMessage,
   }) async {
     await _checkRateLimit();
-    final payload = {
-      'system': [
-        {'text': systemPrompt}
-      ],
-      'messages': [
-        {
-          'role': 'user',
-          'content': [
-            {'text': userMessage}
-          ]
-        }
-      ],
-    };
 
-    final response = await http.post(
-      Uri.parse(_apiUrl),
-      headers: {
-        'Authorization': 'Bearer $_apiKey',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(payload),
-    );
+    // Fix 9: Hard-cap payload size to prevent OOM and runaway AI costs
+    final safeMessage = userMessage.length > _maxInputLength
+        ? userMessage.substring(0, _maxInputLength)
+        : userMessage;
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['output']['message']['content'][0]['text'] ?? '';
-    } else {
-      throw Exception('API error: ${response.statusCode} - ${response.body}');
+    try {
+      final result = await _callBedrockFn.call({
+        'systemPrompt': systemPrompt,
+        'userMessage': safeMessage,
+      });
+      return (result.data as Map<String, dynamic>)['text'] as String? ?? '';
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception('AI error (${e.code}): ${e.message}');
     }
   }
 
@@ -121,29 +108,19 @@ class AiService {
       final messages = _formatMessages(history);
       final systemPrompts = _extractSystemPrompts(history);
 
-      final payload = {
-        'messages': messages,
-      };
+      // Fix 9: Cap total chat payload
+      final systemText = systemPrompts.isNotEmpty
+          ? systemPrompts.map((m) => m['text'] ?? '').join(' ')
+          : 'You are TaskMate, a helpful AI assistant.';
+      final userMessages = messages.where((m) => m['role'] == 'user').toList();
+      final lastUserMsg = userMessages.isNotEmpty
+          ? (userMessages.last['content'] as List?)?.firstOrNull?['text'] ?? ''
+          : '';
 
-      if (systemPrompts.isNotEmpty) {
-        payload['system'] = systemPrompts;
-      }
-
-      final response = await http.post(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(payload),
+      return await _callBedrock(
+        systemPrompt: systemText,
+        userMessage: lastUserMsg,
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['output']['message']['content'][0]['text'] ?? '';
-      } else {
-        throw Exception('API error: ${response.statusCode} - ${response.body}');
-      }
     } catch (e) {
       throw Exception('Failed to get AI response: $e');
     }

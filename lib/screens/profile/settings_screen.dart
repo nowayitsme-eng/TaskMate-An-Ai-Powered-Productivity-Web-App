@@ -18,46 +18,6 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ─── Appearance ─────────────────────────────────────────────────
-          _SectionHeader(title: '🎨 Appearance'),
-          const SizedBox(height: 12),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Theme Mode',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _ThemeButton(
-                      label: 'System',
-                      icon: Icons.brightness_auto,
-                      isSelected: settings.themeMode == ThemeMode.system,
-                      onTap: () => settings.setThemeMode(ThemeMode.system),
-                    ),
-                    const SizedBox(width: 12),
-                    _ThemeButton(
-                      label: 'Light',
-                      icon: Icons.wb_sunny_rounded,
-                      isSelected: settings.themeMode == ThemeMode.light,
-                      onTap: () => settings.setThemeMode(ThemeMode.light),
-                    ),
-                    const SizedBox(width: 12),
-                    _ThemeButton(
-                      label: 'Dark',
-                      icon: Icons.nightlight_round,
-                      isSelected: settings.themeMode == ThemeMode.dark,
-                      onTap: () => settings.setThemeMode(ThemeMode.dark),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
           // ─── Pomodoro ───────────────────────────────────────────────────
           _SectionHeader(title: '🍅 Pomodoro Defaults'),
           const SizedBox(height: 12),
@@ -157,55 +117,7 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
-class _ThemeButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ThemeButton(
-      {required this.label,
-      required this.icon,
-      required this.isSelected,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppTheme.primary.withValues(alpha: 0.2)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected ? AppTheme.primary : Colors.grey.withValues(alpha: 0.3),
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon,
-                  color: isSelected ? AppTheme.primaryLight : Colors.grey,
-                  size: 22),
-              const SizedBox(height: 6),
-              Text(label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? AppTheme.primaryLight : Colors.grey,
-                  )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Removed ThemeButton
 
 class _DurationRow extends StatelessWidget {
   final String label;

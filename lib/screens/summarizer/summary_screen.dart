@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../theme/app_theme.dart';
 
 class SummaryScreen extends StatelessWidget {
@@ -31,6 +32,16 @@ class SummaryScreen extends StatelessWidget {
             child: MarkdownBody(
               data: summary,
               selectable: true,
+              // Fix 8: Only allow safe http/https links
+              onTapLink: (text, href, title) async {
+                if (href == null) return;
+                final uri = Uri.tryParse(href);
+                if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                }
+              },
               styleSheet: MarkdownStyleSheet(
                 p: const TextStyle(fontSize: 16, height: 1.8),
                 h1: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.5),
