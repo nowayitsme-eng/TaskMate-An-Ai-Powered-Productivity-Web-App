@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_functions/firebase_functions.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AiService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -10,9 +13,14 @@ class AiService {
   // Maximum text length allowed to be sent to the AI (prevents OOM/cost drain)
   static const int _maxInputLength = 12000;
 
-  // Firebase Cloud Function proxy (keeps API key server-side)
-  final _callBedrockFn = FirebaseFunctions.instanceFor(region: 'us-east-1')
-      .httpsCallable('callBedrock');
+  // Firebase Cloud Function proxy is disabled because it is not deployed.
+  // We use direct API calls as a fallback for local testing.
+  // The API key is loaded from the .env file to prevent GitHub secret exposure.
+  final String _apiKey = dotenv.env['BEDROCK_API_KEY'] ?? '';
+  final String _region = 'us-east-1';
+  final String _modelId = 'us.anthropic.claude-sonnet-4-6';
+  
+  String get _apiUrl => 'https://bedrock-runtime.$_region.amazonaws.com/model/${Uri.encodeComponent(_modelId)}/converse';
 
   // ─── AI Chat History Methods ──────────────────────────────────────────────
 
@@ -90,13 +98,35 @@ class AiService {
         : userMessage;
 
     try {
-      final result = await _callBedrockFn.call({
-        'systemPrompt': systemPrompt,
-        'userMessage': safeMessage,
-      });
-      return (result.data as Map<String, dynamic>)['text'] as String? ?? '';
-    } on FirebaseFunctionsException catch (e) {
-      throw Exception('AI error (${e.code}): ${e.message}');
+      final payload = {
+        'system': systemPrompt.isNotEmpty ? [{'text': systemPrompt}] : [],
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {'text': safeMessage}
+            ]
+          }
+        ],
+      };
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['output']['message']['content'][0]['text'] ?? '';
+      } else {
+        throw Exception('API error: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('AI error: $e');
     }
   }
 
@@ -105,17 +135,16 @@ class AiService {
   Future<String> getAiResponse(List<Map<String, String>> history) async {
     try {
       await _checkRateLimit();
-      final messages = _formatMessages(history);
       final systemPrompts = _extractSystemPrompts(history);
 
-      // Fix 9: Cap total chat payload
+      // Use the system prompt from history if available
       final systemText = systemPrompts.isNotEmpty
           ? systemPrompts.map((m) => m['text'] ?? '').join(' ')
           : 'You are TaskMate, a helpful AI assistant.';
-      final userMessages = messages.where((m) => m['role'] == 'user').toList();
-      final lastUserMsg = userMessages.isNotEmpty
-          ? (userMessages.last['content'] as List?)?.firstOrNull?['text'] ?? ''
-          : '';
+
+      // Get the last user message
+      final userMsgs = history.where((m) => m['role'] == 'user').toList();
+      final lastUserMsg = userMsgs.isNotEmpty ? userMsgs.last['content'] ?? '' : '';
 
       return await _callBedrock(
         systemPrompt: systemText,
@@ -185,7 +214,7 @@ Respond ONLY with a valid JSON array of strings. No explanation, no markdown, no
       final List<dynamic> parsed = jsonDecode(cleaned);
       return parsed.map((e) => e.toString()).toList();
     } catch (e) {
-      print('DecomposeTask Error: $e');
+      debugPrint('DecomposeTask Error: $e');
       // Fallback: generic sub-tasks
       return [
         'Research "$taskTitle"',
@@ -227,7 +256,7 @@ No other text, markdown, or explanation.
         };
       }).toList();
     } catch (e) {
-      print('GenerateFlashcards Error: $e');
+      debugPrint('GenerateFlashcards Error: $e');
       return [
         {'question': 'Failed to generate flashcards', 'answer': e.toString()}
       ];
@@ -287,7 +316,7 @@ No explanation, no markdown code block. Example:
               })
           .toList();
     } catch (e) {
-      print('GenerateQuiz Error: $e');
+      debugPrint('GenerateQuiz Error: $e');
       return [
         {
           'question': 'Could not generate quiz',

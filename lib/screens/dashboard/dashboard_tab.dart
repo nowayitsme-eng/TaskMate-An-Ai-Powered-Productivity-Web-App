@@ -126,7 +126,6 @@ class _DashboardTabState extends State<DashboardTab> {
         final upcomingTasks =
             tasks.where((t) => !t.completed && t.dueDate.isAfter(todayEnd)).toList()
               ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
-        final completedTasks = tasks.where((t) => t.completed).toList();
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),

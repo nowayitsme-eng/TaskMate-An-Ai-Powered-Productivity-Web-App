@@ -47,7 +47,7 @@ class TaskMateApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsProvider>();
+    context.watch<SettingsProvider>(); // Ensure SettingsProvider is listened to
     return MaterialApp(
       title: 'TaskMate',
       theme: AppTheme.darkTheme,

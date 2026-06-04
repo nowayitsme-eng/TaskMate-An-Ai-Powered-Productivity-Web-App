@@ -68,12 +68,12 @@ class TaskService {
 
     await batch.commit();
 
-    // Sync to Google Calendar if connected
+    // Sync to Google Calendar if connected (debounced, void return)
     if (_calendarService.isConnected) {
       final doc = await taskRef.get();
       if (doc.exists) {
         final task = TaskModel.fromMap(doc.id, doc.data()!);
-        await _calendarService.updateCalendarEvent(task);
+        _calendarService.updateCalendarEvent(task); // void — no await needed
       }
     }
   }

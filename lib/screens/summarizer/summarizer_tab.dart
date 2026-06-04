@@ -235,6 +235,7 @@ class _SummarizerTabState extends State<SummarizerTab> {
         controller: _notesController,
         maxLines: null,
         expands: true,
+        maxLength: 5000,
         decoration: const InputDecoration(
           hintText: 'Paste your lecture notes, article, or any long text here...\n\nWhen you hit Generate, a dedicated full-screen view will open with your results!',
           hintStyle: TextStyle(color: AppTheme.grayLight, height: 1.5),

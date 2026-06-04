@@ -2,7 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists user preferences to local storage using SharedPreferences.
 class SettingsService {
-  static const _keyTheme = 'pref_theme_mode';
   static const _keyPomodoroWork = 'pref_pomodoro_work';
   static const _keyPomodoroBreak = 'pref_pomodoro_break';
   static const _keyPomodoroLongBreak = 'pref_pomodoro_long_break';

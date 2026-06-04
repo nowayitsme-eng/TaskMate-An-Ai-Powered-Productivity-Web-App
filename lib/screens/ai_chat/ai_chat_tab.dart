@@ -215,6 +215,7 @@ class _AiChatTabState extends State<AiChatTab> {
                   Expanded(
                     child: TextField(
                       controller: _inputController,
+                      maxLength: 1000,
                       decoration: InputDecoration(
                         hintText: 'Ask me anything...',
                         filled: true,
@@ -224,6 +225,7 @@ class _AiChatTabState extends State<AiChatTab> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        counterText: "",
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),

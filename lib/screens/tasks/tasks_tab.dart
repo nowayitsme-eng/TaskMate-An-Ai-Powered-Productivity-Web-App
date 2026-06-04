@@ -394,7 +394,11 @@ class _TasksTabState extends State<TasksTab> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(hintText: 'Task description'),
+                    maxLength: 200,
+                    decoration: const InputDecoration(
+                      hintText: 'Task description',
+                      counterText: "",
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -447,7 +451,11 @@ class _TasksTabState extends State<TasksTab> {
                 Expanded(
                   child: TextField(
                     controller: _subjectController,
-                    decoration: const InputDecoration(hintText: 'Category (optional)'),
+                    maxLength: 50,
+                    decoration: const InputDecoration(
+                      hintText: 'Category (optional)',
+                      counterText: "",
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
