@@ -500,11 +500,33 @@ class _TasksTabState extends State<TasksTab> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addTask,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Icon(Icons.add),
+                Container(
+                  height: 56,
+                  width: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primaryDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _addTask,
+                      child: const Center(
+                        child: Icon(Icons.add, color: Colors.white, size: 28),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -572,34 +594,22 @@ class _TasksTabState extends State<TasksTab> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: [
-              ...filters.map((f) {
-                final isSelected = _filterBy == f;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(f),
-                    selected: isSelected,
-                    onSelected: (_) => setState(() => _filterBy = f),
-                    selectedColor: AppTheme.primary.withValues(alpha: 0.25),
-                    checkmarkColor: AppTheme.primaryLight,
-                    labelStyle: TextStyle(
-                        color: isSelected ? AppTheme.primaryLight : AppTheme.gray,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                  ),
-                );
-              }),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.history, color: AppTheme.primaryLight),
-                tooltip: 'Task History / Archive',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const TaskHistoryScreen()),
-                  );
-                },
-              ),
-            ],
+            children: filters.map((f) {
+              final isSelected = _filterBy == f;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(f),
+                  selected: isSelected,
+                  onSelected: (_) => setState(() => _filterBy = f),
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.25),
+                  checkmarkColor: AppTheme.primaryLight,
+                  labelStyle: TextStyle(
+                      color: isSelected ? AppTheme.primaryLight : AppTheme.gray,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                ),
+              );
+            }).toList(),
           ),
         ),
         const SizedBox(height: 8),
@@ -614,6 +624,16 @@ class _TasksTabState extends State<TasksTab> {
                 return DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13)));
               }).toList(),
               onChanged: (v) => setState(() => _sortBy = v ?? 'Date'),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.history, color: AppTheme.primaryLight),
+              tooltip: 'Task History / Archive',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const TaskHistoryScreen()),
+                );
+              },
             ),
           ],
         ),

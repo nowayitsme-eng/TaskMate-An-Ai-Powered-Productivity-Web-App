@@ -1,0 +1,191 @@
+====================================================================
+TASKMATE - COMPREHENSIVE UI BLUEPRINT & DOCUMENTATION
+====================================================================
+This document serves as an exhaustive reference for the entire user interface 
+of the TaskMate application, detailing every screen, button, entry field, 
+chart, and widget.
+
+--------------------------------------------------------------------
+1. AUTHENTICATION (LOGIN & SIGN UP SCREEN)
+--------------------------------------------------------------------
+Location: lib/screens/auth/login_screen.dart
+Layout: Centered container with a glassmorphism effect over a dark gradient 
+background (Colors: #1E293B to #0F172A). Maximum width constrained to 420px.
+
+Elements:
+- Title text: "TaskMate" (40px, bold, purple primaryLight color)
+- Subtitle: "Your premium productivity companion"
+- Error/Success Banner: Conditional container at the top that displays 
+  firebase auth errors (red) or success messages (green) with an icon.
+- Full Name Field (Sign Up only): TextFormField with user icon.
+- Email Field: TextFormField with email icon. Validates for '@'.
+- Password Field: TextFormField with lock icon and an eye icon to toggle 
+  visibility. Minimum 6 characters.
+- Confirm Password Field (Sign Up only): Same as password field.
+- Submit Button: Full-width ElevatedButton ("Login" or "Sign Up").
+- Toggle Mode TextButton: Swaps between Login and Sign Up.
+- Forgot Password TextButton: Triggers password reset email (Login only).
+- Resend Verification TextButton: Appears conditionally if the user's email 
+  is unverified.
+
+--------------------------------------------------------------------
+2. MAIN NAVIGATION (HOME SCREEN)
+--------------------------------------------------------------------
+Location: lib/screens/home/home_screen.dart
+Layout: Scaffold with a transparent AppBar and a BottomNavigationBar.
+
+Elements:
+- AppBar: 
+  - Title: "TaskMate"
+  - Action (Right): User's email displayed in small text.
+  - Action (Far Right): Logout IconButton (red danger color).
+- Bottom Navigation Bar:
+  - Fixed type with 7 tabs: Dashboard, Tasks, Pomodoro, GPA Calc, 
+    AI Chat (Study Hub), Summarizer, Profile.
+  - Active color: Primary purple (#8B5CF6).
+
+--------------------------------------------------------------------
+3. DASHBOARD TAB
+--------------------------------------------------------------------
+Location: lib/screens/dashboard/dashboard_tab.dart
+Layout: Vertically scrolling view with multiple distinct sections.
+
+Elements:
+- Virtual Pet Section:
+  - An animated widget showing a pet that reacts to user's activity.
+- Greeting Header: 
+  - "Hello, [User Name] 👋"
+  - Subtitle: "Let's conquer your goals today!"
+- Stats Row (3 Cards):
+  - Completed (Green icon, displays lifetime tasks completed).
+  - Overdue (Red icon, displays currently overdue task count).
+  - Focus (Orange icon, displays lifetime pomodoro minutes).
+- Quick Actions Row (4 circular buttons):
+  - "+ Task" -> Jumps to Tasks tab.
+  - "Timer" -> Jumps to Pomodoro tab.
+  - "Study" -> Jumps to Study Hub.
+  - "Notes" -> Jumps to Summarizer.
+- Overdue Section: Lists up to 5 overdue tasks.
+- Due Today Section: Lists tasks due by 11:59 PM today.
+- Upcoming Section: Lists up to 5 upcoming tasks.
+- Weekly AI Insight Card:
+  - Gradient background container.
+  - Displays a dynamically generated paragraph from Claude summarizing 
+    the user's weekly performance based on completed tasks, pomodoro 
+    minutes, and top categories.
+
+--------------------------------------------------------------------
+4. TASKS TAB & HISTORY
+--------------------------------------------------------------------
+Location: lib/screens/tasks/tasks_tab.dart & task_history_screen.dart
+Layout: A scrollable column containing a creation form, filters, and a list.
+
+Elements in Tasks Tab:
+- Task Form Card:
+  - Task Description: TextField (max 200 chars).
+  - AI Decompose Button (✨): A 56x56 gradient button next to the description. 
+    Tapping this opens a BottomSheet where AI suggests sub-tasks.
+  - Category / Subject: TextField (max 50 chars).
+  - Type Dropdown: Select between Assignment, Project, Exam, Quiz, Personal.
+  - Due Date Picker: InputDecorator that opens standard Date and Time pickers.
+  - Add Task Button (+): A 56x56 gradient button matching the AI button.
+  - Priority Selector: Three horizontal pill buttons (Low 🟢, Med 🟡, High 🔴).
+- Filter Bar:
+  - Horizontal scrolling row of FilterChips: All, Today, High, Medium, Low.
+- Sort Row:
+  - Text: "Sort by:"
+  - Dropdown: "Date" or "Priority".
+  - History Button: A history clock icon button on the far right.
+- Task List:
+  - Displays active tasks as Cards.
+  - Checkbox on the left to mark as completed (adds XP).
+  - Delete button on the right (Soft deletes to archive).
+
+Elements in Task History Screen:
+- Layout: Simple Scaffold with an AppBar titled "Archived Tasks".
+- List: Shows all soft-deleted tasks.
+- Swipe to permanently delete.
+- Restore button to move them back to the active Tasks tab.
+
+--------------------------------------------------------------------
+5. POMODORO TIMER TAB
+--------------------------------------------------------------------
+Location: lib/screens/pomodoro/pomodoro_tab.dart
+Layout: Centered circular timer with configuration sliders.
+
+Elements:
+- CircularTimer: A massive circular progress indicator reflecting time left.
+- Time Display: Large centered text showing MM:SS.
+- Session indicator: Text showing "Session X/Y".
+- Play/Pause Button: Large primary button to start/stop the timer.
+- Reset Button: Resets the current session.
+- Config Sliders:
+  - Work Duration (1-60 mins).
+  - Short Break (1-30 mins).
+  - Long Break (1-45 mins).
+  - Sessions before Long Break.
+
+--------------------------------------------------------------------
+6. GPA CALCULATOR TAB
+--------------------------------------------------------------------
+Location: lib/screens/gpa/gpa_tab.dart
+Layout: Scrollable list of semesters.
+
+Elements:
+- Cumulative GPA Header: A large visual card showing the overall GPA.
+- Semester Cards: Each card represents a semester containing courses.
+- Add Course Button: Inside each semester card. Opens a dialog to enter:
+  - Course Name.
+  - Credits (numeric).
+  - Grade Dropdown (A+, A, B, etc.).
+- Add Semester Button: Floating action button or bottom row button to 
+  create a new semester block.
+
+--------------------------------------------------------------------
+7. STUDY HUB (AI CHAT TAB)
+--------------------------------------------------------------------
+Location: lib/screens/ai_chat/ai_chat_tab.dart
+Layout: Chat interface similar to iMessage or WhatsApp.
+
+Elements:
+- Message List: Scrollable area. User messages align right (blue bubbles), 
+  AI messages align left (dark bubbles).
+- Input Area:
+  - TextField to type queries.
+  - Send Button: Arrow icon.
+
+--------------------------------------------------------------------
+8. SUMMARIZER & QUIZ TAB
+--------------------------------------------------------------------
+Location: lib/screens/summarizer/summarizer_tab.dart & quiz_screen.dart
+Layout: Split between text input and generated results.
+
+Elements:
+- Input TextField: A large multi-line text area to paste articles/notes.
+- Summarize Button: Generates bullet-point summaries using AI.
+- Generate Quiz Button: Generates multiple-choice questions from the text.
+- Generate Flashcards Button: Creates standard Q&A flashcards.
+- Results Area: Displays the Markdown summary.
+- Quiz Screen: Presents questions one by one with selectable radio buttons 
+  and calculates a final score.
+
+--------------------------------------------------------------------
+9. PROFILE TAB & ANALYTICS
+--------------------------------------------------------------------
+Location: lib/screens/profile/profile_tab.dart
+Layout: Scrollable profile page with heavy gamification elements.
+
+Elements:
+- User Header: Avatar placeholder and Email display.
+- Level & XP Bar:
+  - Shows current level (e.g., Level 5).
+  - LinearProgressIndicator showing XP progress to the next level.
+  - Text: "Current XP: X / Next Level: Y"
+- Heatmap / Activity Chart:
+  - A grid of small squares representing daily activity over the last year 
+    (GitHub style). Darker green means more tasks completed that day.
+- Bar Charts / Analytics:
+  - Shows time spent per subject using a horizontal bar chart or pie chart.
+- Change Password Button: Opens a modal with current/new password fields.
+- Logout Button.
+====================================================================
