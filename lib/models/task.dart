@@ -38,6 +38,7 @@ class TaskModel {
   bool isSubTask;
   String? calendarEventId; // Google Calendar event ID for two-way sync
   int priority; // 0=Low, 1=Medium, 2=High
+  bool isArchived; // Soft delete flag
 
   TaskModel({
     required this.id,
@@ -51,6 +52,7 @@ class TaskModel {
     this.isSubTask = false,
     this.calendarEventId,
     this.priority = 0,
+    this.isArchived = false,
   });
 
   factory TaskModel.fromMap(String id, Map<String, dynamic> data) {
@@ -66,6 +68,7 @@ class TaskModel {
       isSubTask: data['isSubTask'] ?? false,
       calendarEventId: data['calendarEventId'],
       priority: (data['priority'] as num?)?.toInt() ?? 0,
+      isArchived: data['isArchived'] ?? false,
     );
   }
 
@@ -81,6 +84,7 @@ class TaskModel {
       'isSubTask': isSubTask,
       'calendarEventId': calendarEventId,
       'priority': priority,
+      'isArchived': isArchived,
     };
   }
 

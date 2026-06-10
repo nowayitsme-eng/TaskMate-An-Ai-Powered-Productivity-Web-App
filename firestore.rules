@@ -11,13 +11,16 @@ service cloud.firestore {
       // or by small, bounded amounts to prevent spoofing.
       allow update: if request.auth != null
         && request.auth.uid == userId
-        // Prevent arbitrary jumps in XP (max 100 per write, cannot set directly to huge number)
+        // Prevent arbitrary jumps in XP (max 200 per write)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['xp', 'level', 'badges', 'lifetimeTasksCompleted', 'lifetimePomodoroMinutes'])
             || (
               request.resource.data.get('xp', 0) >= 0
               && request.resource.data.get('xp', 0) <= resource.data.get('xp', 0) + 200
               && request.resource.data.get('xp', 0) >= resource.data.get('xp', 0) - 200
-            ));
+            ))
+        // Basic type safety for analytics maps to prevent destructive overwrites
+        && (request.resource.data.get('activityMap', {}) is map)
+        && (request.resource.data.get('subjectMinutes', {}) is map);
 
       // Allow creating the document
       allow create: if request.auth != null && request.auth.uid == userId;

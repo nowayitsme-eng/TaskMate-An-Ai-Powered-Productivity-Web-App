@@ -16,6 +16,20 @@ class TaskService {
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
+            .where((task) => !task.isArchived)
+            .toList());
+  }
+
+  Stream<List<TaskModel>> getArchivedTasks(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    return _db
+        .collection('users')
+        .doc(userId)
+        .collection('tasks')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
+            .where((task) => task.isArchived)
             .toList());
   }
 
@@ -97,7 +111,38 @@ class TaskService {
 
     final batch = _db.batch();
 
-    // Delete parent
+    // Soft Delete parent
+    final taskRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('tasks')
+        .doc(taskId);
+    batch.update(taskRef, {'isArchived': true});
+
+    // Find and delete sub-tasks
+    final subtasksSnapshot = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('tasks')
+        .where('parentTaskId', isEqualTo: taskId)
+        .get();
+
+    for (var doc in subtasksSnapshot.docs) {
+      batch.update(doc.reference, {'isArchived': true});
+    }
+
+    await batch.commit();
+
+    // Delete corresponding calendar event if connected
+    if (_calendarService.isConnected && calendarEventId != null) {
+      await _calendarService.deleteCalendarEvent(calendarEventId);
+    }
+  }
+
+  Future<void> permanentDeleteTask(String providedUserId, String taskId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    final batch = _db.batch();
+
     final taskRef = _db
         .collection('users')
         .doc(userId)
@@ -105,7 +150,6 @@ class TaskService {
         .doc(taskId);
     batch.delete(taskRef);
 
-    // Find and delete sub-tasks
     final subtasksSnapshot = await _db
         .collection('users')
         .doc(userId)
@@ -118,10 +162,5 @@ class TaskService {
     }
 
     await batch.commit();
-
-    // Delete corresponding calendar event if connected
-    if (_calendarService.isConnected && calendarEventId != null) {
-      await _calendarService.deleteCalendarEvent(calendarEventId);
-    }
   }
 }

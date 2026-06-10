@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -60,21 +59,6 @@ class AiService {
   }
 
   // ─── Helpers for Converse API Format ─────────────────────────────────────
-
-  // Converts standard [{role: 'user', content: '...'}] to Converse API format
-  List<Map<String, dynamic>> _formatMessages(
-      List<Map<String, String>> history) {
-    final conversationMessages =
-        history.where((msg) => msg['role'] != 'system').toList();
-    return conversationMessages.map((msg) {
-      return {
-        'role': msg['role'],
-        'content': [
-          {'text': msg['content']}
-        ]
-      };
-    }).toList();
-  }
 
   // Extracts system messages
   List<Map<String, dynamic>> _extractSystemPrompts(

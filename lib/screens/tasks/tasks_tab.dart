@@ -12,6 +12,7 @@ import '../../services/activity_service.dart';
 import '../../services/messaging_service.dart';
 import '../../services/cache_service.dart';
 import '../../theme/app_theme.dart';
+import 'task_history_screen.dart';
 
 class TasksTab extends StatefulWidget {
   final void Function(TaskModel task)? onFocusTask;
@@ -588,6 +589,16 @@ class _TasksTabState extends State<TasksTab> {
                   ),
                 );
               }),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.history, color: AppTheme.primaryLight),
+                tooltip: 'Task History / Archive',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const TaskHistoryScreen()),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -725,7 +736,7 @@ class _TasksTabState extends State<TasksTab> {
                     leading: Checkbox(
                       value: task.completed,
                       activeColor: AppTheme.secondary,
-                      onChanged: isOffline ? null : (val) async {
+                      onChanged: (val) async {
                         if (val != null) {
                           _taskService.updateTask(userId, task.id, {'completed': val});
                           if (val && !task.completed) {
@@ -841,7 +852,7 @@ class _TasksTabState extends State<TasksTab> {
                           ),
                         IconButton(
                           icon: const Icon(Icons.delete_outline, color: AppTheme.dangerLight),
-                          onPressed: isOffline ? null : () {
+                          onPressed: () {
                             _taskService.deleteTask(userId, task.id);
                             _notificationService.cancelTaskReminder(task.id);
                           },
