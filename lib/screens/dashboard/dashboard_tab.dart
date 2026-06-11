@@ -11,6 +11,7 @@ import '../../services/cache_service.dart';
 import '../../services/activity_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/virtual_pet.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class DashboardTab extends StatefulWidget {
   final void Function(int tabIndex) onNavigateToTab;
@@ -38,7 +39,6 @@ class _DashboardTabState extends State<DashboardTab> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Load cached insight once when the widget first builds with a valid user
     if (!_insightLoaded) {
       _insightLoaded = true;
       _loadCachedInsight();
@@ -67,7 +67,6 @@ class _DashboardTabState extends State<DashboardTab> {
       final overdue = tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).toList();
       final pomodoroMinutes = tasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
 
-      // Collect top categories
       final catCount = <String, int>{};
       for (final t in recentCompleted) {
         if (t.subject != null && t.subject!.isNotEmpty) {
@@ -77,10 +76,14 @@ class _DashboardTabState extends State<DashboardTab> {
       final topCategories = catCount.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
+      final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final upcomingTasks = tasks.where((t) => !t.completed && t.dueDate.isAfter(todayEnd)).toList();
+
       final insight = await _aiService.generateWeeklyInsight(
         userId: userId,
         completedTasks: recentCompleted.length,
         overdueTasks: overdue.length,
+        upcomingTasks: upcomingTasks.length,
         pomodoroMinutes: pomodoroMinutes,
         topCategories: topCategories.take(3).map((e) => e.key).toList(),
       );
@@ -107,8 +110,31 @@ class _DashboardTabState extends State<DashboardTab> {
     return StreamBuilder<List<TaskModel>>(
       stream: taskService.getTasks(userId),
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SkeletonLoader(height: 120, borderRadius: 24),
+                const SizedBox(height: 28),
+                const SkeletonLoader(height: 40, width: 200),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(child: const SkeletonLoader(height: 100, borderRadius: 24)),
+                    const SizedBox(width: 16),
+                    Expanded(child: const SkeletonLoader(height: 100, borderRadius: 24)),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                const SkeletonLoader(height: 80, borderRadius: 24),
+              ],
+            ),
+          );
+        }
+
         final tasks = snapshot.data ?? [];
-        // Update cache whenever we get fresh data
         if (snapshot.hasData) {
           _cacheService.cacheTasks(userId, tasks);
         }
@@ -128,13 +154,13 @@ class _DashboardTabState extends State<DashboardTab> {
               ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Virtual Pet
               _buildVirtualPet(tasks, now),
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
 
               // Greeting Header
               _buildGreeting(context),
@@ -142,41 +168,41 @@ class _DashboardTabState extends State<DashboardTab> {
 
               // Stats Row
               _buildStatsRow(tasks, overdueTasks, context),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
               // Quick Actions
               _buildQuickActions(context),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
 
               // Overdue Tasks
               if (overdueTasks.isNotEmpty) ...[
                 _buildSectionHeader('🔥 Overdue', '${overdueTasks.length} tasks', AppTheme.danger),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 ...overdueTasks
                     .take(5)
                     .map((t) => _buildTaskCard(context, t, isOverdue: true)),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
               ],
 
               // Today's Tasks
               if (todayTasks.isNotEmpty) ...[
-                _buildSectionHeader('📋 Due Today', '${todayTasks.length} tasks', AppTheme.accent),
-                const SizedBox(height: 12),
+                _buildSectionHeader('📋 Due Today', '${todayTasks.length} tasks', AppTheme.primary),
+                const SizedBox(height: 16),
                 ...todayTasks.map((t) => _buildTaskCard(context, t)),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
               ],
 
               // Upcoming
               if (upcomingTasks.isNotEmpty) ...[
-                _buildSectionHeader('📅 Upcoming', '${upcomingTasks.length} tasks', AppTheme.primaryLight),
-                const SizedBox(height: 12),
+                _buildSectionHeader('📅 Upcoming', '${upcomingTasks.length} tasks', AppTheme.textSecondary),
+                const SizedBox(height: 16),
                 ...upcomingTasks.take(5).map((t) => _buildTaskCard(context, t)),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
               ],
 
               // Weekly AI Insights
               _buildWeeklyInsightCard(tasks),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Empty state
               if (tasks.isEmpty)
@@ -186,13 +212,13 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: Column(
                       children: [
                         Icon(Icons.rocket_launch,
-                            size: 64, color: AppTheme.primary.withValues(alpha: 0.5)),
+                            size: 64, color: AppTheme.primary.withValues(alpha: 0.2)),
                         const SizedBox(height: 16),
-                        const Text('Your slate is clean!',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text('Your slate is clean!',
+                            style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 8),
                         const Text('Add a task to get started.',
-                            style: TextStyle(color: AppTheme.gray)),
+                            style: TextStyle(color: AppTheme.textSecondary)),
                       ],
                     ),
                   ),
@@ -209,33 +235,26 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget _buildWeeklyInsightCard(List<TaskModel> tasks) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primary.withValues(alpha: 0.18),
-            AppTheme.accent.withValues(alpha: 0.12),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.border),
+        boxShadow: AppTheme.cardShadow,
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card header
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppTheme.primarySurface,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.psychology, color: AppTheme.primaryLight, size: 20),
+                child: const Icon(Icons.psychology, color: AppTheme.primary, size: 24),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,40 +262,38 @@ class _DashboardTabState extends State<DashboardTab> {
                     Text(
                       'Weekly AI Insight',
                       style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                     ),
                     Text(
-                      'Powered by Claude',
-                      style: TextStyle(fontSize: 11, color: AppTheme.grayLight),
+                      'Powered by AI',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                     ),
                   ],
                 ),
               ),
-              // Refresh button
               IconButton(
                 icon: _insightLoading
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryLight),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
                       )
-                    : const Icon(Icons.refresh, color: AppTheme.primaryLight, size: 20),
+                    : const Icon(Icons.refresh, color: AppTheme.primary, size: 22),
                 tooltip: 'Refresh insight',
                 onPressed: _insightLoading ? null : () => _generateInsight(tasks),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          // Insight body
+          const SizedBox(height: 16),
           if (_insightLoading && _weeklyInsight == null)
             _buildShimmer()
           else if (_weeklyInsight != null)
             Text(
               _weeklyInsight!,
               style: const TextStyle(
-                fontSize: 14,
-                height: 1.65,
-                color: Colors.white,
+                fontSize: 15,
+                height: 1.6,
+                color: AppTheme.textSecondary,
               ),
             )
           else
@@ -292,19 +309,13 @@ class _DashboardTabState extends State<DashboardTab> {
       children: [
         const Text(
           'Get a personalized weekly report from your AI coach — based on your task completions and Pomodoro focus time.',
-          style: TextStyle(color: AppTheme.grayLight, fontSize: 13, height: 1.6),
+          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: _insightLoading ? null : () => _generateInsight(tasks),
-          icon: const Icon(Icons.auto_awesome, size: 16),
+          icon: const Icon(Icons.auto_awesome, size: 18),
           label: const Text('Generate My Insight'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            textStyle: const TextStyle(fontSize: 13),
-          ),
         ),
       ],
     );
@@ -353,7 +364,7 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  // ─── Existing widgets ─────────────────────────────────────────────────────
+  // ─── Greeting ─────────────────────────────────────────────────────────────
 
   Widget _buildGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
@@ -361,10 +372,10 @@ class _DashboardTabState extends State<DashboardTab> {
     IconData icon;
     if (hour < 12) {
       greeting = 'Good Morning';
-      icon = Icons.wb_sunny;
+      icon = Icons.wb_sunny_rounded;
     } else if (hour < 17) {
       greeting = 'Good Afternoon';
-      icon = Icons.wb_cloudy;
+      icon = Icons.wb_cloudy_rounded;
     } else {
       greeting = 'Good Evening';
       icon = Icons.nightlight_round;
@@ -379,18 +390,26 @@ class _DashboardTabState extends State<DashboardTab> {
         final userName = snapshot.data?.displayName ?? defaultName;
         return Row(
           children: [
-            Icon(icon, color: AppTheme.accentLight, size: 32),
-            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primarySurface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: AppTheme.primary, size: 28),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$greeting,',
-                      style: const TextStyle(fontSize: 14, color: AppTheme.grayLight)),
+                  Text(greeting,
+                      style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
                   Text(
                     userName,
-                    style: const TextStyle(
-                        fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white),
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -401,6 +420,8 @@ class _DashboardTabState extends State<DashboardTab> {
       },
     );
   }
+
+  // ─── Stats Row ────────────────────────────────────────────────────────────
 
   Widget _buildStatsRow(
       List<TaskModel> all, List<TaskModel> overdue, BuildContext context) {
@@ -413,49 +434,65 @@ class _DashboardTabState extends State<DashboardTab> {
         
         return Row(
           children: [
-            _buildStatCard('Total', '${all.length}', Icons.list_alt, AppTheme.primaryLight),
+            _buildStatCard('Total', '${all.length}', Icons.list_alt, AppTheme.skySurface, AppTheme.skyBlue),
             const SizedBox(width: 12),
-            _buildStatCard('Overdue', '${overdue.length}', Icons.warning_amber, AppTheme.dangerLight),
+            _buildStatCard('Overdue', '${overdue.length}', Icons.warning_amber_rounded, AppTheme.roseSurface, AppTheme.rosePink),
             const SizedBox(width: 12),
-            _buildStatCard('Done', '${profile.lifetimeTasksCompleted}', Icons.check_circle, AppTheme.secondaryLight),
+            _buildStatCard('Done', '${profile.lifetimeTasksCompleted}', Icons.check_circle_outline, AppTheme.secondarySurface, AppTheme.secondary),
             const SizedBox(width: 12),
-            _buildStatCard('Focus', '${profile.lifetimePomodoroMinutes}m', Icons.timer, AppTheme.accentLight),
+            _buildStatCard('Focus', '${profile.lifetimePomodoroMinutes}m', Icons.timer_outlined, AppTheme.accentSurface, AppTheme.accent),
           ],
         );
       },
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String label, String value, IconData icon, Color bgColor, Color iconColor) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(value,
-                  style: TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             ),
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(label,
-                  style: const TextStyle(fontSize: 11, color: AppTheme.grayLight)),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.textMuted, fontWeight: FontWeight.w500)),
             ),
           ],
         ),
       ),
     );
   }
+
+  // ─── Quick Actions ────────────────────────────────────────────────────────
 
   Widget _buildQuickActions(BuildContext context) {
     return Row(
@@ -464,25 +501,28 @@ class _DashboardTabState extends State<DashboardTab> {
           child: _buildQuickActionButton(
             icon: Icons.add_task,
             label: 'New Task',
-            color: AppTheme.primary,
+            bgColor: const Color(0xFFFDF4FF), // fuchsia-50
+            iconColor: const Color(0xFFC026D3), // fuchsia-600
             onTap: () => widget.onNavigateToTab(1),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildQuickActionButton(
-            icon: Icons.play_circle_fill,
-            label: 'Start Pomodoro',
-            color: AppTheme.secondary,
+            icon: Icons.play_arrow_rounded,
+            label: 'Focus Time',
+            bgColor: const Color(0xFFF0FDFA), // teal-50
+            iconColor: const Color(0xFF0D9488), // teal-600
             onTap: () => widget.onNavigateToTab(2),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildQuickActionButton(
-            icon: Icons.smart_toy,
+            icon: Icons.smart_toy_outlined,
             label: 'Ask AI',
-            color: AppTheme.accent,
+            bgColor: const Color(0xFFFFFBEB), // amber-50
+            iconColor: const Color(0xFFD97706), // amber-600
             onTap: () => widget.onNavigateToTab(4),
           ),
         ),
@@ -493,32 +533,29 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget _buildQuickActionButton({
     required IconData icon,
     required String label,
-    required Color color,
+    required Color bgColor,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.25), color.withValues(alpha: 0.1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: iconColor.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(height: 10),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(label,
                   style: TextStyle(
-                      color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+                      color: iconColor, fontSize: 13, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -526,81 +563,91 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
+  // ─── Section Header ───────────────────────────────────────────────────────
+
   Widget _buildSectionHeader(String title, String subtitle, Color color) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-        Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+        Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted, fontWeight: FontWeight.w500)),
       ],
     );
   }
 
+  // ─── Task Card ────────────────────────────────────────────────────────────
+
   Widget _buildTaskCard(BuildContext context, TaskModel task,
       {bool isOverdue = false}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isOverdue ? AppTheme.danger.withValues(alpha: 0.08) : AppTheme.glass,
-        borderRadius: BorderRadius.circular(12),
+        color: isOverdue ? AppTheme.dangerSurface : AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isOverdue
-              ? AppTheme.danger.withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.08),
+          color: isOverdue ? AppTheme.dangerLight : AppTheme.border,
         ),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
-          // Task info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   task.text,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600, 
+                    fontSize: 15,
+                    color: isOverdue ? AppTheme.danger : AppTheme.textPrimary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.calendar_today,
-                        size: 12,
-                        color: isOverdue ? AppTheme.dangerLight : AppTheme.gray),
-                    const SizedBox(width: 4),
+                        size: 14,
+                        color: isOverdue ? AppTheme.danger : AppTheme.textMuted),
+                    const SizedBox(width: 6),
                     Text(
                       DateFormat('MMM d, h:mm a').format(task.dueDate),
                       style: TextStyle(
                           fontSize: 12,
-                          color: isOverdue ? AppTheme.dangerLight : AppTheme.grayLight),
+                          color: isOverdue ? AppTheme.danger : AppTheme.textMuted),
                     ),
                     if (task.pomodoroMinutes > 0) ...[
-                      const SizedBox(width: 12),
-                      const Icon(Icons.timer, size: 12, color: AppTheme.accentLight),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 14),
+                      const Icon(Icons.timer_outlined, size: 14, color: AppTheme.accent),
+                      const SizedBox(width: 6),
                       Text('${task.pomodoroMinutes}m',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.accentLight)),
+                          style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w600)),
                     ],
                   ],
                 ),
               ],
             ),
           ),
-          // Focus button
-          IconButton(
-            icon: const Icon(Icons.bolt, color: AppTheme.accentLight),
-            tooltip: 'Focus on this task',
-            onPressed: () => widget.onFocusTask(task),
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.primarySurface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.bolt, color: AppTheme.primary),
+              tooltip: 'Focus on this task',
+              onPressed: () => widget.onFocusTask(task),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-// ─── Shimmer Bar Widget ───────────────────────────────────────────────────────
 
 class _ShimmerBar extends StatefulWidget {
   final double width;
@@ -622,7 +669,7 @@ class _ShimmerBarState extends State<_ShimmerBar>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.04, end: 0.15).animate(
+    _anim = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
   }
@@ -640,9 +687,9 @@ class _ShimmerBarState extends State<_ShimmerBar>
       builder: (context, _) => Container(
         width: widget.width,
         height: 14,
-        margin: const EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: _anim.value),
+          color: AppTheme.border.withValues(alpha: _anim.value),
           borderRadius: BorderRadius.circular(7),
         ),
       ),

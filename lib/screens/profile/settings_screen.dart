@@ -103,7 +103,7 @@ class _SettingsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppTheme.textPrimary.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -146,7 +146,7 @@ class _DurationRow extends StatelessWidget {
             children: [
               Text(label,
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
+              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             ],
           ),
         ),
@@ -169,7 +169,7 @@ class _DurationRow extends StatelessWidget {
               onPressed: value < max ? () => onChanged(value + 1) : null,
             ),
             const SizedBox(width: 4),
-            const Text('min', style: TextStyle(color: AppTheme.gray, fontSize: 12)),
+            const Text('min', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
           ],
         ),
       ],

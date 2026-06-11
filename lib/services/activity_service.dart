@@ -61,6 +61,25 @@ class ActivityService {
     }
   }
 
+  /// Streams the full activity map.
+  Stream<Map<String, int>> streamActivityMap(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    return _db.collection('users').doc(userId).snapshots().map((doc) {
+      if (!doc.exists) return {};
+      final data = doc.data() as Map<String, dynamic>;
+      final activityData = data['activityMap'] as Map<String, dynamic>? ?? {};
+      final map = <String, int>{};
+      activityData.forEach((key, value) {
+        if (value is Map<String, dynamic>) {
+          final tasks = (value['tasksCompleted'] as num?)?.toInt() ?? 0;
+          final pomodoro = (value['pomodoroMinutes'] as num?)?.toInt() ?? 0;
+          map[key] = tasks * 10 + pomodoro;
+        }
+      });
+      return map;
+    });
+  }
+
   /// Fetches per-subject pomodoro minutes for analytics charts.
   /// Returns a map of subjectName → total minutes.
   Future<Map<String, int>> getSubjectMinutes(String providedUserId) async {
@@ -74,6 +93,17 @@ class ActivityService {
     } catch (_) {
       return {};
     }
+  }
+
+  /// Streams per-subject pomodoro minutes.
+  Stream<Map<String, int>> streamSubjectMinutes(String providedUserId) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    return _db.collection('users').doc(userId).snapshots().map((doc) {
+      if (!doc.exists) return {};
+      final data = doc.data() as Map<String, dynamic>;
+      final subjectData = data['subjectMinutes'] as Map<String, dynamic>? ?? {};
+      return subjectData.map((k, v) => MapEntry(k, (v as num).toInt()));
+    });
   }
 
   /// Checks whether the user has been active for 7 consecutive days.

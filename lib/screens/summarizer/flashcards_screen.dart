@@ -75,7 +75,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               const SizedBox(width: 32),
               const Text(
                 'Tap to flip',
-                style: TextStyle(color: AppTheme.grayLight, fontSize: 16),
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               const SizedBox(width: 32),
               IconButton(
@@ -194,8 +194,9 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                     Text(
                       isFront ? 'Q ${widget.index}/${widget.total}' : 'Answer',
                       style: TextStyle(
-                        color: isFront ? AppTheme.primaryLight : AppTheme.secondaryLight,
-                        fontWeight: FontWeight.bold,
+                        color: isFront ? AppTheme.primaryDark : AppTheme.secondaryDark,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
                         letterSpacing: 2,
                       ),
                     ),
@@ -205,7 +206,7 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                         child: Text(
                           isFront ? widget.question : widget.answer,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500, height: 1.5),
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.5, color: AppTheme.textPrimary),
                         ),
                       ),
                     ),

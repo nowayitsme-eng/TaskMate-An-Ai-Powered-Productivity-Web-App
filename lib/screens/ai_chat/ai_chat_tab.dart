@@ -94,9 +94,9 @@ class _AiChatTabState extends State<AiChatTab> {
         padding: const EdgeInsets.all(16),
         constraints: const BoxConstraints(maxWidth: 600),
         decoration: BoxDecoration(
-          color: isUser ? AppTheme.secondary.withValues(alpha: 0.15) : AppTheme.primary.withValues(alpha: 0.15),
+          color: isUser ? AppTheme.primarySurface : AppTheme.surface,
           border: Border.all(
-            color: isUser ? AppTheme.secondary.withValues(alpha: 0.3) : AppTheme.primary.withValues(alpha: 0.3),
+            color: isUser ? AppTheme.primaryLight : AppTheme.border,
           ),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
@@ -119,14 +119,14 @@ class _AiChatTabState extends State<AiChatTab> {
             }
           },
           styleSheet: MarkdownStyleSheet(
-            p: TextStyle(color: isUser ? const Color(0xFFA7F3D0) : const Color(0xFFE9D5FF), fontSize: 16),
+            p: TextStyle(color: isUser ? AppTheme.primaryDark : AppTheme.textPrimary, fontSize: 16),
             codeblockDecoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: AppTheme.background,
               borderRadius: BorderRadius.circular(8),
             ),
             code: TextStyle(
               backgroundColor: Colors.transparent,
-              color: AppTheme.accentLight,
+              color: AppTheme.accent,
               fontFamily: 'Courier',
             ),
           ),
@@ -141,7 +141,7 @@ class _AiChatTabState extends State<AiChatTab> {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Card(
+      child: Card(elevation: 0, color: Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -167,9 +167,9 @@ class _AiChatTabState extends State<AiChatTab> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(color: AppTheme.background),
                   ),
                   child: userId == null
                       ? const Center(child: CircularProgressIndicator())
@@ -238,10 +238,10 @@ class _AiChatTabState extends State<AiChatTab> {
                         ? const SizedBox(
                             width: 24,
                             height: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(color: AppTheme.textPrimary, strokeWidth: 2),
                           )
                         : IconButton(
-                            icon: const Icon(Icons.send, color: Colors.white),
+                            icon: const Icon(Icons.send, color: AppTheme.textPrimary),
                             onPressed: _sendMessage,
                           ),
                   ),

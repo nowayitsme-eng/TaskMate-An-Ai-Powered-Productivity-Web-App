@@ -11,6 +11,7 @@ import '../../widgets/activity_heatmap.dart';
 import 'settings_screen.dart';
 import 'change_password_modal.dart';
 import 'analytics_screen.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -56,23 +57,67 @@ class _ProfileTabState extends State<ProfileTab> {
     return StreamBuilder<UserProfile>(
       stream: _gamService.getUserProfile(userId),
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 8),
+                const SkeletonLoader(height: 250, borderRadius: 28),
+                const SizedBox(height: 32),
+                const SkeletonLoader(width: 150, height: 20),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    const SizedBox(width: 16),
+                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    const SizedBox(width: 16),
+                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const SkeletonLoader(height: 200, borderRadius: 24),
+              ],
+            ),
+          );
+        }
+
         final profile = snapshot.data ?? const UserProfile();
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildProfileHeader(profile),
-              const SizedBox(height: 24),
-              _buildXpCard(profile),
-              const SizedBox(height: 24),
-              _buildBadgesSection(profile),
-              const SizedBox(height: 24),
-              _buildHeatmapSection(),
+              const SizedBox(height: 8),
+              _buildProfileCard(profile),
               const SizedBox(height: 32),
-              _buildSettingsSection(),
+              const Text(
+                'EARNED BADGES',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildBadgesGrid(profile),
               const SizedBox(height: 32),
+              _buildHeatmapCard(userId),
+              const SizedBox(height: 24),
+              _buildAnalyticsCard(),
+              const SizedBox(height: 32),
+              _buildSettingsList(),
+              const SizedBox(height: 40),
             ],
           ),
         );
@@ -80,100 +125,287 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  // ─── Profile Header ───────────────────────────────────────────────────────
-
-  Widget _buildProfileHeader(UserProfile profile) {
+  Widget _buildProfileCard(UserProfile profile) {
     final userId = context.read<AuthService>().user?.uid ?? '';
     final defaultName = context.read<AuthService>().user?.email?.split('@').first ?? 'User';
     final userName = profile.displayName ?? defaultName;
-    final levelEmoji = _levelEmoji(profile.level);
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.primary.withValues(alpha: 0.25), AppTheme.accent.withValues(alpha: 0.1)],
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEDEEFC), Color(0xFFF7EDFC)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          // Avatar + Level badge
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF86EFAC), Color(0xFF6EE7B7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(color: AppTheme.surface, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF86EFAC).withValues(alpha: 0.6),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    )
+                  ],
+                ),
+                child: const Center(
+                  child: Text('🌱', style: TextStyle(fontSize: 42)),
+                ),
+              ),
+              // Level badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppTheme.surface, width: 2),
+                ),
+                child: Text(
+                  'Lv.${profile.level}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Name + Edit button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                userName,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => _editUsername(context, userId, userName),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface.withValues(alpha: 0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit_rounded, size: 16, color: AppTheme.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // XP Progress bar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Level ${profile.level} Progress',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
+                  ),
+                  Text(
+                    '${profile.xpInCurrentLevel} / ${profile.xpForNextLevel} XP',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: profile.levelProgress,
+                  minHeight: 10,
+                  backgroundColor: Colors.white.withValues(alpha: 0.6),
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Stats row
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatChip(
+                  icon: '⭐',
+                  value: '${profile.xp}',
+                  label: 'Total XP',
+                  color: const Color(0xFFFFF7ED),
+                  textColor: const Color(0xFFD97706),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatChip(
+                  icon: '🏅',
+                  value: '${profile.badges.length}/${kAllBadges.length}',
+                  label: 'Badges',
+                  color: AppTheme.primarySurface,
+                  textColor: AppTheme.primaryDark,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatChip(
+                  icon: '🔥',
+                  value: '${profile.lifetimeTasksCompleted}',
+                  label: 'Tasks Done',
+                  color: const Color(0xFFFFF1F2),
+                  textColor: const Color(0xFFE11D48),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatChip({
+    required String icon,
+    required String value,
+    required String label,
+    required Color color,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 20)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: textColor),
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: textColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgesGrid(UserProfile profile) {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 2.2,
+      children: kAllBadges.map((badge) {
+        final earned = profile.badges.contains(badge.id);
+        return _buildBadgeCard(badge, earned);
+      }).toList(),
+    );
+  }
+
+  Widget _buildBadgeCard(BadgeInfo badge, bool earned) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: earned ? const Color(0xFFF8F9FE) : const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: earned ? const Color(0xFFD3DDFB) : const Color(0xFFF1F3F5),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          // Avatar with level ring
           Container(
-            width: 80,
-            height: 80,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [AppTheme.primary.withValues(alpha: 0.4), AppTheme.primaryDark.withValues(alpha: 0.2)],
-              ),
-              border: Border.all(color: AppTheme.primary, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primary.withValues(alpha: 0.4),
-                  blurRadius: 16,
-                  spreadRadius: 2,
-                ),
-              ],
+              color: earned ? AppTheme.primary : AppTheme.border,
             ),
             child: Center(
-              child: Text(levelEmoji, style: const TextStyle(fontSize: 36)),
+              child: earned
+                  ? Text(badge.emoji, style: const TextStyle(fontSize: 24))
+                  : const Icon(Icons.lock, color: Colors.white, size: 20),
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
-                        userName,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                        badge.name,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: earned ? AppTheme.primaryDark : AppTheme.textMuted,
+                        ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 16, color: AppTheme.grayLight),
-                      onPressed: () => _editUsername(context, userId, userName),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
-                      ),
-                      child: Text(
-                        'Level ${profile.level}',
-                        style: const TextStyle(
-                            fontSize: 13,
+                    if (earned)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD3DDFB),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'EARNED',
+                          style: TextStyle(
+                            fontSize: 8,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryLight),
+                            color: AppTheme.primaryDark,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '${profile.xp} XP total',
-                      style: const TextStyle(color: AppTheme.gray, fontSize: 12),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${profile.badges.length} badge${profile.badges.length != 1 ? 's' : ''} earned',
-                  style: const TextStyle(color: AppTheme.grayLight, fontSize: 12),
+                  badge.description,
+                  style: TextStyle(
+                    fontSize: 10,
+                    height: 1.2,
+                    color: earned ? AppTheme.textSecondary : AppTheme.textMuted,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -183,501 +415,402 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  // ─── Edit Username ────────────────────────────────────────────────────────
+  Widget _buildSettingsList() {
+    final isConnected = _calendarService.isConnected;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          _buildSettingsTile(
+            icon: Icons.calendar_month_rounded,
+            iconColor: AppTheme.primary,
+            iconBg: const Color(0xFFF0F4FF),
+            title: 'Connect Google Calendar',
+            subtitle: 'Sync task deadlines to Google Calendar',
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isConnected ? const Color(0xFFE6F4EA) : AppTheme.background,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                isConnected ? 'LINKED' : 'NOT LINKED',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isConnected ? const Color(0xFF1E8E3E) : AppTheme.textSecondary,
+                ),
+              ),
+            ),
+            onTap: () async {
+              if (isConnected) {
+                await _calendarService.disconnect();
+                setState(() => _lastSyncCount = -1);
+              } else {
+                setState(() => _calendarConnecting = true);
+                final ok = await _calendarService.connect();
+                setState(() => _calendarConnecting = false);
+                if (ok) {
+                  ToastController().showSuccess(
+                    '📅 Calendar Connected!',
+                    'Tasks will now sync to Google Calendar automatically.',
+                  );
+                }
+              }
+            },
+          ),
+          const Divider(height: 1, color: AppTheme.border),
+          _buildSettingsTile(
+            icon: Icons.key_rounded,
+            iconColor: AppTheme.textSecondary,
+            iconBg: AppTheme.background,
+            title: 'Change Password',
+            onTap: () => showDialog(
+              context: context,
+              builder: (_) => const ChangePasswordModal(),
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.border),
+          _buildSettingsTile(
+            icon: Icons.settings_rounded,
+            iconColor: const Color(0xFF7C3AED),
+            iconBg: const Color(0xFFF5F3FF),
+            title: 'App Settings',
+            subtitle: 'Pomodoro, notifications & more',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          const Divider(height: 1, color: AppTheme.border),
+          _buildSettingsTile(
+            icon: Icons.delete_outline_rounded,
+            iconColor: AppTheme.danger,
+            iconBg: const Color(0xFFFEF2F2),
+            title: 'Delete Account',
+            titleColor: AppTheme.danger,
+            onTap: _showDeleteAccountDialog,
+          ),
+          const Divider(height: 1, color: AppTheme.border),
+          _buildSettingsTile(
+            icon: Icons.logout_rounded,
+            iconColor: AppTheme.danger,
+            iconBg: const Color(0xFFFEF2F2),
+            title: 'Sign Out',
+            titleColor: AppTheme.danger,
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => Dialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  child: Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('👋', style: TextStyle(fontSize: 40)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Sign Out?',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textPrimary),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'You can always sign back in to continue your progress.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  side: const BorderSide(color: AppTheme.border),
+                                ),
+                                child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.danger,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w800)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                context.read<AuthService>().signOut();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    Color titleColor = AppTheme.textPrimary,
+    String? subtitle,
+    Widget? trailing,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: titleColor,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null) trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeatmapCard(String userId) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Study Activity Heatmap',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          StreamBuilder<Map<String, int>>(
+            stream: _activityService.streamActivityMap(userId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final map = snapshot.data ?? {};
+              return ActivityHeatmap(activityMap: map);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsCard() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+      ),
+      child: Container(
+        height: 200,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Study Analytics (Focus Hours)',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day) {
+                return Text(
+                  day,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textMuted,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _editUsername(BuildContext context, String userId, String currentName) async {
     final controller = TextEditingController(text: currentName);
     final newName = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.dark,
-        title: const Text('Edit Username'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Enter new username'),
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primarySurface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.edit_rounded, color: AppTheme.primary, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text(
+                      'Change Display Name',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  hintText: 'Enter display name',
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  filled: true,
+                  fillColor: AppTheme.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppTheme.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppTheme.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: AppTheme.border),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppTheme.grayLight)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
 
     if (newName != null && newName.isNotEmpty && newName != currentName) {
       await _gamService.updateDisplayName(userId, newName);
     }
-  }
-
-  // ─── XP Progress Card ─────────────────────────────────────────────────────
-
-  Widget _buildXpCard(UserProfile profile) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('XP Progress',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(
-                  '${profile.xpInCurrentLevel} / ${profile.xpForNextLevel} XP',
-                  style: const TextStyle(color: AppTheme.primaryLight, fontSize: 13),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0, end: profile.levelProgress),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) => LinearProgressIndicator(
-                  value: value,
-                  minHeight: 14,
-                  backgroundColor: Colors.white.withValues(alpha: 0.06),
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildXpHint('✅ Task', '+10 XP'),
-                _buildXpHint('🍅 Pomodoro min', '+1 XP'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildXpHint(String label, String value) {
-    return Row(
-      children: [
-        Text(label, style: const TextStyle(color: AppTheme.gray, fontSize: 12)),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: AppTheme.secondary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(value,
-              style: const TextStyle(
-                  color: AppTheme.secondaryLight,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold)),
-        ),
-      ],
-    );
-  }
-
-  // ─── Badges Section ───────────────────────────────────────────────────────
-
-  Widget _buildBadgesSection(UserProfile profile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Badges',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(
-              '${profile.badges.length} / ${kAllBadges.length}',
-              style: const TextStyle(fontSize: 12, color: AppTheme.gray),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.85,
-          children: kAllBadges.map((badge) {
-            final earned = profile.badges.contains(badge.id);
-            return _buildBadgeCard(badge, earned);
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBadgeCard(BadgeInfo badge, bool earned) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: earned
-            ? AppTheme.primary.withValues(alpha: 0.15)
-            : Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: earned
-              ? AppTheme.primary.withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.06),
-          width: earned ? 1.5 : 1,
-        ),
-        boxShadow: earned
-            ? [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.2), blurRadius: 8)]
-            : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
-                badge.emoji,
-                style: TextStyle(
-                  fontSize: 32,
-                  color: earned ? null : Colors.white.withValues(alpha: 0.15),
-                ),
-              ),
-              if (!earned)
-                const Icon(Icons.lock, size: 18, color: Colors.white30),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            badge.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: earned ? AppTheme.primaryLight : AppTheme.gray,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            badge.description,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 9,
-              color: earned
-                  ? AppTheme.grayLight.withValues(alpha: 0.7)
-                  : AppTheme.gray.withValues(alpha: 0.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Heatmap Section ──────────────────────────────────────────────────────
-
-  Widget _buildHeatmapSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('365-Day Activity',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            if (_heatmapLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              ActivityHeatmap(activityMap: _activityMap),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── Settings Section ─────────────────────────────────────────────────────
-
-  Widget _buildSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4),
-          child: Text('Settings',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 12),
-        // App Settings button
-        Card(
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.tune_rounded, color: AppTheme.primaryLight, size: 20),
-            ),
-            title: const Text('App Settings', style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: const Text('Theme, Pomodoro timers, notifications'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Change Password button
-        Card(
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.accent.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.lock_reset, color: AppTheme.accentLight, size: 20),
-            ),
-            title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: const Text('Update your account password securely'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => showDialog(
-              context: context,
-              builder: (_) => const ChangePasswordModal(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Study Analytics button
-        Card(
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.secondary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.bar_chart_rounded, color: AppTheme.secondaryLight, size: 20),
-            ),
-            title: const Text('Study Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: const Text('View time spent per subject with charts'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Google Calendar Panel
-        _buildCalendarPanel(),
-        const SizedBox(height: 12),
-        // Danger Zone
-        Card(
-          color: AppTheme.danger.withValues(alpha: 0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: AppTheme.danger.withValues(alpha: 0.3)),
-          ),
-          child: ListTile(
-            leading: const Icon(Icons.delete_forever, color: AppTheme.dangerLight),
-            title: const Text('Delete Account',
-                style: TextStyle(
-                    color: AppTheme.dangerLight, fontWeight: FontWeight.bold)),
-            subtitle: const Text(
-                'Permanently delete your account and all data',
-                style: TextStyle(color: AppTheme.grayLight, fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right, color: AppTheme.gray),
-            onTap: _showDeleteAccountDialog,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCalendarPanel() {
-    final isConnected = _calendarService.isConnected;
-    final userId = context.read<AuthService>().user?.uid ?? '';
-
-    return Card(
-      color: isConnected
-          ? const Color(0xFF34A853).withValues(alpha: 0.08)
-          : AppTheme.primary.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isConnected
-              ? const Color(0xFF34A853).withValues(alpha: 0.35)
-              : AppTheme.primary.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isConnected
-                        ? const Color(0xFF34A853).withValues(alpha: 0.15)
-                        : AppTheme.primary.withValues(alpha: 0.15),
-                  ),
-                  child: Icon(
-                    Icons.calendar_month_rounded,
-                    color: isConnected
-                        ? const Color(0xFF34A853)
-                        : AppTheme.primaryLight,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Google Calendar',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(
-                        isConnected
-                            ? 'Two-way sync is active'
-                            : 'Connect for two-way sync',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppTheme.grayLight),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isConnected)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF34A853).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('Active',
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF34A853),
-                            fontWeight: FontWeight.bold)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_lastSyncCount >= 0) ...([
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF34A853).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  _lastSyncCount > 0
-                      ? '✅ Imported $_lastSyncCount new task${_lastSyncCount > 1 ? 's' : ''} from Calendar!'
-                      : '✅ Calendar is fully up to date!',
-                  style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF34A853)),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ]),
-            Row(
-              children: [
-                if (!isConnected)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      icon: _calendarConnecting
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.login, size: 16),
-                      label: const Text('Connect Google Account'),
-                      onPressed: _calendarConnecting
-                          ? null
-                          : () async {
-                              setState(() => _calendarConnecting = true);
-                              final ok =
-                                  await _calendarService.connect();
-                              setState(() => _calendarConnecting = false);
-                              if (ok) {
-                                ToastController().showSuccess(
-                                  '📅 Calendar Connected!',
-                                  'Tasks will now sync to Google Calendar automatically.',
-                                );
-                              }
-                            },
-                    ),
-                  )
-                else ...([
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF34A853),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      icon: _calendarSyncing
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.sync, size: 16),
-                      label: const Text('Sync from Calendar'),
-                      onPressed: _calendarSyncing
-                          ? null
-                          : () async {
-                              setState(() => _calendarSyncing = true);
-                              final count = await _calendarService
-                                  .syncFromCalendar(userId);
-                              setState(() {
-                                _calendarSyncing = false;
-                                _lastSyncCount = count;
-                              });
-                            },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () async {
-                      await _calendarService.disconnect();
-                      setState(() => _lastSyncCount = -1);
-                    },
-                    child: const Text('Disconnect',
-                        style: TextStyle(
-                            color: AppTheme.gray, fontSize: 12)),
-                  ),
-                ]),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _showDeleteAccountDialog() async {
@@ -691,92 +824,153 @@ class _ProfileTabState extends State<ProfileTab> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: AppTheme.dark,
-              title: const Text('Delete Account', style: TextStyle(color: AppTheme.dangerLight)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'This action cannot be undone. All your tasks, XP, badges, and heatmap data will be permanently deleted.',
-                    style: TextStyle(color: AppTheme.grayLight, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Please enter your password to confirm:', style: TextStyle(fontSize: 13)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.05),
-                    ),
-                  ),
-                  if (errorMessage.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(errorMessage, style: const TextStyle(color: AppTheme.dangerLight, fontSize: 12)),
-                  ],
-                ],
-              ),
-              actions: [
-                if (!isLoading)
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel', style: TextStyle(color: AppTheme.grayLight)),
-                  ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          final pwd = passwordController.text;
-                          if (pwd.isEmpty) {
-                            setState(() => errorMessage = 'Password is required');
-                            return;
-                          }
-
-                          setState(() {
-                            isLoading = true;
-                            errorMessage = '';
-                          });
-
-                          try {
-                            final auth = context.read<AuthService>();
-                            await auth.deleteAccount(pwd);
-                            if (ctx.mounted) {
-                              Navigator.pop(ctx);
-                              // User is logged out, the Auth stream will automatically redirect to Login.
-                            }
-                          } catch (e) {
-                            setState(() {
-                              isLoading = false;
-                              errorMessage = e.toString().contains('wrong-password')
-                                  ? 'Incorrect password.'
-                                  : 'Failed to delete account. Please try again.';
-                            });
-                          }
-                        },
-                  child: isLoading
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Delete Permanently'),
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(24),
                 ),
-              ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppTheme.dangerSurface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.delete_forever_rounded, color: AppTheme.danger, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Text(
+                            'Delete Account',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.danger,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.dangerSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.dangerLight.withValues(alpha: 0.5)),
+                      ),
+                      child: const Text(
+                        '⚠️ This action cannot be undone. All your tasks, XP, badges, and heatmap data will be permanently deleted.',
+                        style: TextStyle(color: AppTheme.danger, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Enter your password to confirm:',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                        filled: true,
+                        fillColor: AppTheme.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppTheme.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppTheme.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppTheme.danger, width: 2),
+                        ),
+                      ),
+                    ),
+                    if (errorMessage.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        errorMessage,
+                        style: const TextStyle(color: AppTheme.danger, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        if (!isLoading)
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                side: const BorderSide(color: AppTheme.border),
+                              ),
+                              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        if (!isLoading) const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.danger,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    final pwd = passwordController.text;
+                                    if (pwd.isEmpty) {
+                                      setState(() => errorMessage = 'Password is required');
+                                      return;
+                                    }
+                                    setState(() {
+                                      isLoading = true;
+                                      errorMessage = '';
+                                    });
+                                    try {
+                                      final auth = context.read<AuthService>();
+                                      await auth.deleteAccount(pwd);
+                                      if (ctx.mounted) Navigator.pop(ctx);
+                                    } catch (e) {
+                                      setState(() {
+                                        isLoading = false;
+                                        errorMessage = e.toString().contains('wrong-password')
+                                            ? 'Incorrect password.'
+                                            : 'Failed to delete account. Please try again.';
+                                      });
+                                    }
+                                  },
+                            child: isLoading
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Text('Delete Permanently', style: TextStyle(fontWeight: FontWeight.w800)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         );
       },
     );
-  }
-
-  // ─── Helper ───────────────────────────────────────────────────────────────
-
-  String _levelEmoji(int level) {
-    if (level >= 20) return '👑';
-    if (level >= 15) return '🔥';
-    if (level >= 10) return '⚡';
-    if (level >= 5) return '🌟';
-    return '🌱';
   }
 }

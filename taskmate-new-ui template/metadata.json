@@ -1,0 +1,6 @@
+{
+  "name": "TaskMate",
+  "description": "Gamified study companion and task manager with built-in GPA calculator, interactive Pomodoro timer, AI smart flashcards, quiz generator, and personalized study insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

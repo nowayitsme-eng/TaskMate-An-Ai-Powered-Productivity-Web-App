@@ -24,10 +24,10 @@ class TaskHistoryScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Archived Tasks', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Archived Tasks', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppTheme.textPrimary),
       ),
       body: StreamBuilder<List<TaskModel>>(
         stream: taskService.getArchivedTasks(userId),
@@ -65,12 +65,12 @@ class TaskHistoryScreen extends StatelessWidget {
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: ListTile(
-                  leading: const Icon(Icons.history, color: AppTheme.grayLight),
+                  leading: const Icon(Icons.history, color: AppTheme.textSecondary),
                   title: Text(
                     task.text,
                     style: TextStyle(
                       decoration: task.completed ? TextDecoration.lineThrough : null,
-                      color: AppTheme.grayLight,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
                   subtitle: Text(
@@ -109,9 +109,9 @@ class TaskHistoryScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.background,
-        title: const Text('Permanent Delete', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to permanently delete this task? This action cannot be undone.', style: TextStyle(color: AppTheme.grayLight)),
+        backgroundColor: AppTheme.surface,
+        title: const Text('Permanent Delete', style: TextStyle(color: AppTheme.textPrimary)),
+        content: const Text('Are you sure you want to permanently delete this task? This action cannot be undone.', style: TextStyle(color: AppTheme.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),

@@ -13,6 +13,7 @@ import '../../services/messaging_service.dart';
 import '../../services/cache_service.dart';
 import '../../theme/app_theme.dart';
 import 'task_history_screen.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class TasksTab extends StatefulWidget {
   final void Function(TaskModel task)? onFocusTask;
@@ -87,6 +88,10 @@ class _TasksTabState extends State<TasksTab> {
     _taskService.addTask(userId, task).then((taskId) {
       task.id = taskId;
       _notificationService.scheduleTaskReminder(task);
+    }).catchError((e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add task: $e')));
+      }
     });
 
     // Reset form
@@ -153,7 +158,7 @@ class _TasksTabState extends State<TasksTab> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -175,7 +180,7 @@ class _TasksTabState extends State<TasksTab> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white24,
+                          color: AppTheme.border,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -203,7 +208,7 @@ class _TasksTabState extends State<TasksTab> {
                               ),
                               Text(
                                 '"$taskTitle"',
-                                style: const TextStyle(fontSize: 12, color: AppTheme.grayLight),
+                                style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -214,7 +219,7 @@ class _TasksTabState extends State<TasksTab> {
                     const SizedBox(height: 8),
                     const Text(
                       'Select the sub-tasks you want to add:',
-                      style: TextStyle(color: AppTheme.gray, fontSize: 13),
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                     ),
                     const SizedBox(height: 16),
                     // Sub-task list
@@ -279,7 +284,7 @@ class _TasksTabState extends State<TasksTab> {
                             onPressed: () => Navigator.pop(ctx),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.gray,
-                              side: const BorderSide(color: Colors.white24),
+                              side: const BorderSide(color: AppTheme.border),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -328,6 +333,10 @@ class _TasksTabState extends State<TasksTab> {
                                   final subId = await _taskService.addTask(userId, subTask);
                                   subTask.id = subId;
                                   _notificationService.scheduleTaskReminder(subTask);
+                                }
+                              }).catchError((e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add tasks: $e')));
                                 }
                               });
 
@@ -390,7 +399,7 @@ class _TasksTabState extends State<TasksTab> {
             const SizedBox(height: 16),
             // Task description + AI wand button
             Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: TextField(
@@ -398,7 +407,6 @@ class _TasksTabState extends State<TasksTab> {
                     maxLength: 200,
                     decoration: const InputDecoration(
                       hintText: 'Task description',
-                      counterText: "",
                     ),
                   ),
                 ),
@@ -406,8 +414,8 @@ class _TasksTabState extends State<TasksTab> {
                 Tooltip(
                   message: 'Break it down with AI',
                   child: Container(
-                    height: 56,
-                    width: 56,
+                    height: 55,
+                    width: 55,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primaryDark],
@@ -435,10 +443,10 @@ class _TasksTabState extends State<TasksTab> {
                                   height: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: AppTheme.textPrimary,
                                   ),
                                 )
-                              : const Icon(Icons.auto_awesome, color: Colors.white, size: 22),
+                              : const Icon(Icons.auto_awesome, color: AppTheme.textPrimary, size: 22),
                         ),
                       ),
                     ),
@@ -455,7 +463,6 @@ class _TasksTabState extends State<TasksTab> {
                     maxLength: 50,
                     decoration: const InputDecoration(
                       hintText: 'Category (optional)',
-                      counterText: "",
                     ),
                   ),
                 ),
@@ -474,7 +481,7 @@ class _TasksTabState extends State<TasksTab> {
                       DropdownMenuItem(value: 'Other', child: Text('Other')),
                     ],
                     onChanged: (value) => setState(() => _selectedType = value),
-                    dropdownColor: AppTheme.dark,
+                    dropdownColor: AppTheme.surface,
                   ),
                 ),
               ],
@@ -488,21 +495,21 @@ class _TasksTabState extends State<TasksTab> {
                     child: InputDecorator(
                       decoration: const InputDecoration(
                         hintText: 'Due Date',
-                        prefixIcon: Icon(Icons.calendar_today, color: AppTheme.gray),
+                        prefixIcon: Icon(Icons.calendar_today, color: AppTheme.textSecondary),
                       ),
                       child: Text(
                         _dueDate == null
                             ? 'Select Due Date'
                             : DateFormat('MMM d, y, h:mm a').format(_dueDate!),
-                        style: TextStyle(color: _dueDate == null ? Colors.white54 : Colors.white),
+                        style: TextStyle(color: _dueDate == null ? AppTheme.textSecondary : AppTheme.textPrimary),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Container(
-                  height: 56,
-                  width: 56,
+                  height: 55,
+                  width: 55,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [AppTheme.primary.withValues(alpha: 0.8), AppTheme.primaryDark],
@@ -524,7 +531,7 @@ class _TasksTabState extends State<TasksTab> {
                       borderRadius: BorderRadius.circular(12),
                       onTap: _addTask,
                       child: const Center(
-                        child: Icon(Icons.add, color: Colors.white, size: 28),
+                        child: Icon(Icons.add, color: AppTheme.textPrimary, size: 28),
                       ),
                     ),
                   ),
@@ -535,7 +542,7 @@ class _TasksTabState extends State<TasksTab> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Text('Priority: ', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
+                const Text('Priority: ', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                 const SizedBox(width: 8),
                 ...[0, 1, 2].map((p) {
                   const labels = ['🟢 Low', '🟡 Medium', '🔴 High'];
@@ -555,7 +562,7 @@ class _TasksTabState extends State<TasksTab> {
                           border: Border.all(
                             color: isSelected
                                 ? AppTheme.primary
-                                : Colors.white.withValues(alpha: 0.15),
+                                : AppTheme.border,
                           ),
                         ),
                         child: Text(labels[p],
@@ -615,7 +622,7 @@ class _TasksTabState extends State<TasksTab> {
         const SizedBox(height: 8),
         Row(
           children: [
-            const Text('Sort by:', style: TextStyle(color: AppTheme.gray, fontSize: 13)),
+            const Text('Sort by:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: _sortBy,
@@ -653,7 +660,34 @@ class _TasksTabState extends State<TasksTab> {
             future: _cacheService.getCachedTasks(userId),
             builder: (context, cacheSnapshot) {
               if (!cacheSnapshot.hasData || cacheSnapshot.data!.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 4,
+                  itemBuilder: (ctx, i) => Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          SkeletonLoader(width: 24, height: 24, borderRadius: 12),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SkeletonLoader(height: 16, width: double.infinity),
+                                SizedBox(height: 8),
+                                SkeletonLoader(height: 12, width: 100),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               }
               return _buildListContent(userId, cacheSnapshot.data!, isOffline: true);
             },
@@ -699,7 +733,7 @@ class _TasksTabState extends State<TasksTab> {
           padding: const EdgeInsets.all(32.0),
           child: Text(
             _filterBy == 'All' ? 'No tasks yet. Add one above!' : 'No tasks match this filter.',
-            style: const TextStyle(color: AppTheme.gray),
+            style: const TextStyle(color: AppTheme.textSecondary),
           ),
         ),
       );
@@ -719,9 +753,9 @@ class _TasksTabState extends State<TasksTab> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.wifi_off, size: 16, color: AppTheme.dangerLight),
+                Icon(Icons.wifi_off, size: 16, color: AppTheme.danger),
                 SizedBox(width: 8),
-                Text('Offline Mode — Showing cached tasks', style: TextStyle(color: AppTheme.dangerLight, fontSize: 12)),
+                Text('Offline Mode — Showing cached tasks', style: TextStyle(color: AppTheme.danger, fontSize: 12)),
               ],
             ),
           ),
@@ -738,15 +772,11 @@ class _TasksTabState extends State<TasksTab> {
               padding: EdgeInsets.only(left: task.isSubTask ? 20.0 : 0.0),
               child: Card(
                 margin: const EdgeInsets.only(bottom: 10),
-                color: isOverdue ? AppTheme.danger.withValues(alpha: 0.1) : AppTheme.glass,
+                color: isOverdue ? AppTheme.dangerSurface : AppTheme.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: task.isSubTask
-                        ? AppTheme.primary.withValues(alpha: 0.25)
-                        : isOverdue
-                            ? AppTheme.danger
-                            : Colors.white.withValues(alpha: 0.05),
+                    color: task.isSubTask ? AppTheme.primaryLight : isOverdue ? AppTheme.dangerLight : AppTheme.border,
                     width: isOverdue ? 2 : 1,
                   ),
                 ),
@@ -758,19 +788,22 @@ class _TasksTabState extends State<TasksTab> {
                       activeColor: AppTheme.secondary,
                       onChanged: (val) async {
                         if (val != null) {
-                          _taskService.updateTask(userId, task.id, {'completed': val});
+                          final now = DateTime.now();
+                          _taskService.updateTask(userId, task.id, {
+                            'completed': val,
+                            'completionDate': val ? now.toIso8601String() : null,
+                          });
+                          
                           if (val && !task.completed) {
                             // Task just completed!
                             MessagingService().notifyTaskCompleted(task.text);
                             
-                            await _activityService.logActivity(userId, tasksCompleted: 1);
-                            await _gamService.addXp(userId, GamificationService.xpPerTask);
-                            await _gamService.updateLifetimeStats(userId, tasksDelta: 1);
+                            await _gamService.processTaskCompletion(userId, isCompleted: true, actionDate: now);
                             
                             // Check badges
                             final earned = await _gamService.checkAndAwardBadges(
                               userId,
-                              actionTime: DateTime.now(),
+                              actionTime: now,
                             );
                             
                             if (earned.isNotEmpty) {
@@ -782,10 +815,9 @@ class _TasksTabState extends State<TasksTab> {
                               );
                             }
                           } else if (!val && task.completed) {
-                            // Task unchecked, reverse rewards!
-                            await _activityService.logActivity(userId, tasksCompleted: -1);
-                            await _gamService.addXp(userId, -GamificationService.xpPerTask);
-                            await _gamService.updateLifetimeStats(userId, tasksDelta: -1);
+                            // Task unchecked, reverse rewards on the day it was actually completed
+                            final targetDate = task.completionDate ?? now;
+                            await _gamService.processTaskCompletion(userId, isCompleted: false, actionDate: targetDate);
                           }
                         }
                       },
@@ -800,7 +832,7 @@ class _TasksTabState extends State<TasksTab> {
                             task.text,
                             style: TextStyle(
                               decoration: task.completed ? TextDecoration.lineThrough : null,
-                              color: task.completed ? AppTheme.gray : Colors.white,
+                              color: task.completed ? AppTheme.textMuted : AppTheme.textPrimary,
                               fontSize: task.isSubTask ? 14 : 16,
                             ),
                           ),
@@ -846,13 +878,13 @@ class _TasksTabState extends State<TasksTab> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.calendar_today, size: 12, color: AppTheme.gray),
+                              const Icon(Icons.calendar_today, size: 12, color: AppTheme.textSecondary),
                               const SizedBox(width: 4),
                               Text(
                                 DateFormat('MMM d, y, h:mm a').format(task.dueDate),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isOverdue ? AppTheme.danger : AppTheme.grayLight,
+                                  color: isOverdue ? AppTheme.danger : AppTheme.textSecondary,
                                   fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),

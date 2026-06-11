@@ -4,6 +4,7 @@ import '../../models/subject.dart';
 import '../../services/gpa_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class GpaTab extends StatefulWidget {
   const GpaTab({super.key});
@@ -40,7 +41,7 @@ class _GpaTabState extends State<GpaTab> {
     '0.0': 'F',
   };
 
-  void _addSubject() {
+  Future<void> _addSubject() async {
     final userId = context.read<AuthService>().user?.uid;
     if (userId == null) return;
 
@@ -71,42 +72,60 @@ class _GpaTabState extends State<GpaTab> {
       credits: credits,
     );
 
-    _gpaService.addSubject(userId, subject);
+    try {
+      await _gpaService.addSubject(userId, subject);
 
-    _nameController.clear();
-    _creditsController.clear();
-    setState(() {
-      _selectedGrade = null;
-    });
+      if (mounted) {
+        _nameController.clear();
+        _creditsController.clear();
+        setState(() {
+          _selectedGrade = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save subject: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildGpaForm() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Row(
-              children: const [
-                Icon(Icons.calculate, color: AppTheme.secondaryLight),
-                SizedBox(width: 8),
-                Text('GPA Calculator', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySurface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.calculate, color: AppTheme.primary),
+                ),
+                const SizedBox(width: 12),
+                const Text('GPA Calculator', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(hintText: 'Subject Name'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: _selectedGrade,
                     decoration: const InputDecoration(hintText: 'Grade'),
-                    dropdownColor: AppTheme.dark,
+                    dropdownColor: AppTheme.surface,
                     items: _gradeMap.keys.map((key) {
                       return DropdownMenuItem(
                         value: key,
@@ -118,6 +137,7 @@ class _GpaTabState extends State<GpaTab> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
+                  flex: 2,
                   child: TextField(
                     controller: _creditsController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -125,13 +145,16 @@ class _GpaTabState extends State<GpaTab> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _addSubject,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _addSubject,
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    child: const Icon(Icons.add, size: 24),
                   ),
-                  child: const Icon(Icons.add),
                 ),
               ],
             ),
@@ -151,19 +174,68 @@ class _GpaTabState extends State<GpaTab> {
     }
 
     final double gpa = totalCredits > 0 ? totalGradePoints / totalCredits : 0.0;
-    Color gpaColor = AppTheme.dangerLight;
+    Color gpaColor = AppTheme.danger;
+    Color gpaBgColor = AppTheme.dangerSurface;
     if (gpa >= 3.5) {
-      gpaColor = AppTheme.secondaryLight;
+      gpaColor = AppTheme.secondary;
+      gpaBgColor = AppTheme.secondarySurface;
     } else if (gpa >= 2.0) {
-      gpaColor = AppTheme.accentLight;
+      gpaColor = AppTheme.accent;
+      gpaBgColor = AppTheme.accentSurface;
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+          decoration: BoxDecoration(
+            color: gpaBgColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: gpaColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Your Cumulative GPA', 
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: gpaColor)
+              ),
+              const SizedBox(height: 12),
+              Text(
+                gpa.toStringAsFixed(2),
+                style: TextStyle(
+                  fontSize: 64,
+                  fontWeight: FontWeight.w900,
+                  color: gpaColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Based on $totalCredits credit hours', 
+                  style: TextStyle(color: gpaColor, fontSize: 13, fontWeight: FontWeight.w500)
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 32),
+        const Text('Course List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const SizedBox(height: 16),
+
         if (subjects.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(32.0),
-            child: Text('No subjects added yet', style: TextStyle(color: AppTheme.gray)),
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Text('No subjects added yet', style: TextStyle(color: AppTheme.textMuted)),
+            ),
           )
         else
           ListView.builder(
@@ -173,16 +245,42 @@ class _GpaTabState extends State<GpaTab> {
             itemBuilder: (context, index) {
               final sub = subjects[index];
               final userId = context.read<AuthService>().user!.uid;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                color: AppTheme.glass,
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.border),
+                  boxShadow: AppTheme.cardShadow,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(sub.name, style: const TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(flex: 1, child: Text(sub.grade, textAlign: TextAlign.center)),
-                      Expanded(flex: 1, child: Text('${sub.credits} credits', textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.grayLight))),
+                      Expanded(
+                        flex: 2, 
+                        child: Text(
+                          sub.name, 
+                          style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)
+                        )
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primarySurface,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          sub.grade, 
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '${sub.credits} cr', 
+                        style: const TextStyle(color: AppTheme.textSecondary)
+                      ),
+                      const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, color: AppTheme.dangerLight),
                         onPressed: () => _gpaService.deleteSubject(userId, sub.id),
@@ -193,35 +291,6 @@ class _GpaTabState extends State<GpaTab> {
               );
             },
           ),
-        
-        const SizedBox(height: 32),
-        
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: AppTheme.secondary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.secondary.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            children: [
-              const Text('Your Cumulative GPA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              Text(
-                gpa.toStringAsFixed(2),
-                style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  color: gpaColor,
-                  shadows: [Shadow(color: gpaColor.withValues(alpha: 0.5), blurRadius: 10)],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text('Based on $totalCredits credit hours', style: const TextStyle(color: AppTheme.grayLight)),
-            ],
-          ),
-        )
       ],
     );
   }
@@ -231,18 +300,29 @@ class _GpaTabState extends State<GpaTab> {
     final userId = context.watch<AuthService>().user?.uid;
     
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildGpaForm(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           if (userId != null)
             StreamBuilder<List<SubjectModel>>(
               stream: _gpaService.getSubjects(userId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SkeletonLoader(height: 180, borderRadius: 24),
+                      const SizedBox(height: 32),
+                      const SkeletonLoader(width: 120, height: 24),
+                      const SizedBox(height: 16),
+                      const SkeletonLoader(height: 80, borderRadius: 16),
+                      const SizedBox(height: 12),
+                      const SkeletonLoader(height: 80, borderRadius: 16),
+                    ],
+                  );
                 }
                 return _buildSubjectListAndResult(snapshot.data!);
               },

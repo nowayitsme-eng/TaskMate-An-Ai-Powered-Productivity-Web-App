@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../services/auth_service.dart';
+import '../../services/activity_service.dart';
+import '../../services/gamification_service.dart';
 import '../../theme/app_theme.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -27,12 +31,21 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
-  void _next() {
+  void _next() async {
     setState(() {
       _currentIndex++;
       _answered = false;
       _selectedOption = -1;
     });
+    
+    if (_currentIndex >= widget.questions.length) {
+      final userId = context.read<AuthService>().user?.uid;
+      if (userId != null) {
+        // Treat completing a quiz as 1 task activity and grant 50 XP
+        await ActivityService().logActivity(userId, tasksCompleted: 1);
+        await GamificationService().addXp(userId, 50);
+      }
+    }
   }
 
   void _restart() {
@@ -88,7 +101,7 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             Text(
               'Question ${_currentIndex + 1} of $total',
-              style: const TextStyle(color: AppTheme.grayLight, fontSize: 14),
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 14),
             ),
             Text(
               'Score: $_score',
@@ -107,7 +120,7 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           child: Text(
             q['question'] as String,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.5),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.5, color: AppTheme.textPrimary),
           ),
         ),
         const SizedBox(height: 32),
@@ -126,12 +139,12 @@ class _QuizScreenState extends State<QuizScreen> {
                     borderColor = AppTheme.danger;
                     bgColor = AppTheme.danger.withValues(alpha: 0.12);
                   } else {
-                    borderColor = Colors.white.withValues(alpha: 0.06);
-                    bgColor = Colors.white.withValues(alpha: 0.03);
+                    borderColor = AppTheme.border;
+                    bgColor = AppTheme.surface;
                   }
                 } else {
-                  borderColor = Colors.white.withValues(alpha: 0.1);
-                  bgColor = Colors.white.withValues(alpha: 0.04);
+                  borderColor = AppTheme.border;
+                  bgColor = AppTheme.surface;
                 }
 
                 return GestureDetector(
@@ -143,7 +156,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     decoration: BoxDecoration(
                       color: bgColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: borderColor),
+                      border: Border.all(color: borderColor!, width: 2),
                     ),
                     child: Row(
                       children: [
@@ -152,21 +165,17 @@ class _QuizScreenState extends State<QuizScreen> {
                           height: 32,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _answered && i == correctIndex
-                                ? AppTheme.secondary.withValues(alpha: 0.3)
-                                : _answered && i == _selectedOption
-                                    ? AppTheme.danger.withValues(alpha: 0.3)
-                                    : Colors.white.withValues(alpha: 0.08),
+                            color: _answered && i == correctIndex ? AppTheme.secondary.withValues(alpha: 0.3) : _answered && i == _selectedOption ? AppTheme.danger.withValues(alpha: 0.3) : AppTheme.primarySurface,
                           ),
                           child: Center(
                             child: Text(
                               ['A', 'B', 'C', 'D'][i],
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary),
                             ),
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Expanded(child: Text(options[i], style: const TextStyle(fontSize: 16))),
+                        Expanded(child: Text(options[i], style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary, fontWeight: FontWeight.bold))),
                         if (_answered && i == correctIndex)
                           const Icon(Icons.check_circle, color: AppTheme.secondary, size: 24),
                         if (_answered && i == _selectedOption && i != correctIndex)
@@ -248,7 +257,7 @@ class _QuizScreenState extends State<QuizScreen> {
           const SizedBox(height: 12),
           Text(
             'You got $_score out of $total questions correct.',
-            style: const TextStyle(color: AppTheme.grayLight, fontSize: 16),
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 16),
           ),
           const SizedBox(height: 48),
           Row(

@@ -69,58 +69,62 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return OfflineBanner(
       child: Scaffold(
-      appBar: AppBar(
-        title: const Text('TaskMate', style: TextStyle(fontWeight: FontWeight.w900)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                authService.user?.email ?? '',
-                style: const TextStyle(color: AppTheme.grayLight, fontSize: 12),
-              ),
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          title: Text(
+            'TaskMate',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppTheme.dangerLight),
-            onPressed: () => authService.signOut(),
-          )
-        ],
-      ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+        ),
+        body: SafeArea(
+          child: IndexedStack(
+            index: _currentIndex,
+            children: tabs,
           ),
         ),
-        child: SafeArea(
-          child: tabs[_currentIndex],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              backgroundColor: Colors.transparent,
+              selectedItemColor: AppTheme.primary,
+              unselectedItemColor: AppTheme.textMuted,
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+              selectedFontSize: 11,
+              unselectedFontSize: 10,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, height: 1.5),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, height: 1.5),
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), activeIcon: Icon(Icons.dashboard_rounded), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.task_alt), activeIcon: Icon(Icons.task_alt), label: 'Tasks'),
+                BottomNavigationBarItem(icon: Icon(Icons.timer_outlined), activeIcon: Icon(Icons.timer), label: 'Focus'),
+                BottomNavigationBarItem(icon: Icon(Icons.calculate_outlined), activeIcon: Icon(Icons.calculate), label: 'GPA'),
+                BottomNavigationBarItem(icon: Icon(Icons.smart_toy_outlined), activeIcon: Icon(Icons.smart_toy), label: 'AI Chat'),
+                BottomNavigationBarItem(icon: Icon(Icons.school_outlined), activeIcon: Icon(Icons.school), label: 'Study'),
+                BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+              ],
+            ),
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        backgroundColor: AppTheme.dark,
-        selectedItemColor: AppTheme.primary,
-        unselectedItemColor: AppTheme.gray,
-        type: BottomNavigationBarType.fixed,
-        selectedFontSize: 11,
-        unselectedFontSize: 10,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.task_alt), label: 'Tasks'),
-          BottomNavigationBarItem(icon: Icon(Icons.timer), label: 'Pomodoro'),
-          BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'GPA Calc'),
-          BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'AI Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Study Hub'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
       ),
     );
   }

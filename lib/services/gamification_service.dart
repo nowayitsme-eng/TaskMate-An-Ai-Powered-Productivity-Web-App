@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_profile.dart';
 import 'activity_service.dart';
 import 'cache_service.dart';
+import 'package:intl/intl.dart';
 
 class GamificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -67,6 +68,7 @@ class GamificationService {
           'badges': current.badges,
           'lastUpdated': FieldValue.serverTimestamp(),
         },
+        SetOptions(merge: true),
       );
     });
   }
@@ -101,6 +103,57 @@ class GamificationService {
         },
         SetOptions(merge: true),
       );
+    });
+  }
+
+  // ─── Unified Processing ───────────────────────────────────────────────────
+
+  /// Safely processes a task check/uncheck event, combining XP, Lifetime Stats,
+  /// and Activity Map logging into a single Firestore transaction to prevent
+  /// multiple rapid writes on the same user document.
+  Future<void> processTaskCompletion(
+    String providedUserId, {
+    required bool isCompleted,
+    required DateTime actionDate,
+  }) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
+    final ref = _profileRef(userId);
+
+    await _db.runTransaction((tx) async {
+      final doc = await tx.get(ref);
+      final data = doc.exists ? doc.data() as Map<String, dynamic> : <String, dynamic>{};
+      final current = UserProfile.fromMap(data);
+
+      // 1. Calculate XP
+      final xpDelta = isCompleted ? xpPerTask : -xpPerTask;
+      final newXp = (current.xp + xpDelta).clamp(0, double.maxFinite.toInt());
+      final newLevel = (newXp / 100).floor() + 1;
+
+      // 2. Calculate Lifetime Stats
+      final tasksDelta = isCompleted ? 1 : -1;
+      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(0, double.maxFinite.toInt());
+
+      // 3. Activity Map (Heatmap)
+      final dateKey = DateFormat('yyyy-MM-dd').format(actionDate);
+      final activityMap = data['activityMap'] as Map<String, dynamic>? ?? {};
+      final dayData = activityMap[dateKey] as Map<String, dynamic>? ?? {};
+      final currentDayTasks = (dayData['tasksCompleted'] as num?)?.toInt() ?? 0;
+      final newDayTasks = (currentDayTasks + tasksDelta).clamp(0, double.maxFinite.toInt());
+
+      // Merge Update
+      final update = {
+        'xp': newXp,
+        'level': newLevel,
+        'lifetimeTasksCompleted': newTasks,
+        'lastUpdated': FieldValue.serverTimestamp(),
+        'activityMap': {
+          dateKey: {
+            'tasksCompleted': newDayTasks,
+          }
+        }
+      };
+
+      tx.set(ref, update, SetOptions(merge: true));
     });
   }
 

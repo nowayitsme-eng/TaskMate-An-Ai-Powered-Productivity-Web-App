@@ -68,13 +68,15 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
       if (_isRunning && _lastPausedTime != null) {
         final now = DateTime.now();
         final diffInSeconds = now.difference(_lastPausedTime!).inSeconds;
-        setState(() {
-          _timeLeft -= diffInSeconds;
-          if (_isWorkTime) {
-            _totalWorkSecondsThisSession += diffInSeconds;
-          }
-          if (_timeLeft < 0) _timeLeft = 0;
-        });
+        if (mounted) {
+          setState(() {
+            _timeLeft -= diffInSeconds;
+            if (_isWorkTime) {
+              _totalWorkSecondsThisSession += diffInSeconds;
+            }
+            if (_timeLeft < 0) _timeLeft = 0;
+          });
+        }
         _lastPausedTime = null;
         
         // If the timer theoretically finished while in the background
@@ -172,7 +174,11 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
             // Grant XP and log activity for the completed work session
             if (userId != null) {
               final minutesWorked = int.tryParse(_workDurationController.text) ?? 25;
-              _activityService.logActivity(userId, pomodoroMinutes: minutesWorked);
+              _activityService.logActivity(
+                userId, 
+                pomodoroMinutes: minutesWorked,
+                subject: widget.focusedTask?.subject ?? 'General',
+              );
               _gamService.addXp(userId, minutesWorked);
               _gamService.updateLifetimeStats(userId, pomodoroDelta: minutesWorked).then((_) {
                 _gamService
@@ -193,7 +199,11 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                           .toList(),
                     );
                   }
+                }).catchError((e) {
+                  debugPrint('Badge error: $e');
                 });
+              }).catchError((e) {
+                debugPrint('Lifetime stats error: $e');
               });
             }
           } else {
@@ -281,11 +291,11 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('FOCUSING ON', style: TextStyle(fontSize: 10, letterSpacing: 2, color: AppTheme.grayLight)),
+                            const Text('FOCUSING ON', style: TextStyle(fontSize: 10, letterSpacing: 2, color: AppTheme.textMuted)),
                             const SizedBox(height: 2),
                             Text(
                               widget.focusedTask!.text,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -293,7 +303,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                       ),
                       if (widget.onClearFocus != null)
                         IconButton(
-                          icon: const Icon(Icons.close, color: AppTheme.grayLight, size: 18),
+                          icon: const Icon(Icons.close, color: AppTheme.textMuted, size: 18),
                           onPressed: widget.onClearFocus,
                           tooltip: 'Stop focusing',
                         ),
@@ -333,7 +343,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                           fontSize: 80,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'Courier',
-                          color: Colors.white,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -368,7 +378,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                             icon: const Icon(Icons.refresh),
                             label: const Text('Reset'),
                             style: TextButton.styleFrom(
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppTheme.textSecondary,
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                             ),
                           ),
@@ -403,7 +413,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
       width: 100,
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: AppTheme.grayLight, fontSize: 12)),
+          Text(label, style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
           const SizedBox(height: 8),
           TextField(
             controller: controller,

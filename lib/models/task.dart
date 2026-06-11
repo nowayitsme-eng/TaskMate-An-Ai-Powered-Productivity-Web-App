@@ -33,6 +33,7 @@ class TaskModel {
   String? type;
   DateTime dueDate;
   bool completed;
+  DateTime? completionDate;
   int pomodoroMinutes;
   String? parentTaskId;
   bool isSubTask;
@@ -47,6 +48,7 @@ class TaskModel {
     this.type,
     required this.dueDate,
     this.completed = false,
+    this.completionDate,
     this.pomodoroMinutes = 0,
     this.parentTaskId,
     this.isSubTask = false,
@@ -63,6 +65,7 @@ class TaskModel {
       type: data['type'],
       dueDate: DateTime.parse(data['dueDate']),
       completed: data['completed'] ?? false,
+      completionDate: data['completionDate'] != null ? DateTime.tryParse(data['completionDate']) : null,
       pomodoroMinutes: data['pomodoroMinutes'] ?? 0,
       parentTaskId: data['parentTaskId'],
       isSubTask: data['isSubTask'] ?? false,
@@ -79,6 +82,7 @@ class TaskModel {
       'type': type,
       'dueDate': dueDate.toIso8601String(),
       'completed': completed,
+      if (completionDate != null) 'completionDate': completionDate!.toIso8601String(),
       'pomodoroMinutes': pomodoroMinutes,
       'parentTaskId': parentTaskId,
       'isSubTask': isSubTask,

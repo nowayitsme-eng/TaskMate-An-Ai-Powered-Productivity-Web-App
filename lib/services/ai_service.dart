@@ -349,6 +349,7 @@ No explanation, no markdown code block. Example:
     required String userId,
     required int completedTasks,
     required int overdueTasks,
+    required int upcomingTasks,
     required int pomodoroMinutes,
     required List<String> topCategories,
   }) async {
@@ -366,9 +367,10 @@ Given a user's weekly stats, write a SHORT (3-5 sentence), warm, personalized mo
         : topCategories.join(', ');
 
     final userMessage = '''
-My stats for this past week:
+My stats for this past week and looking ahead:
 - Completed tasks: $completedTasks
 - Overdue tasks: $overdueTasks
+- Upcoming tasks to do: $upcomingTasks
 - Total Pomodoro focus time: $pomodoroMinutes minutes
 - Top categories worked on: $categorySummary
 
@@ -393,6 +395,7 @@ Please give me my weekly insight.
         'stats': {
           'completedTasks': completedTasks,
           'overdueTasks': overdueTasks,
+          'upcomingTasks': upcomingTasks,
           'pomodoroMinutes': pomodoroMinutes,
           'topCategories': topCategories,
         },

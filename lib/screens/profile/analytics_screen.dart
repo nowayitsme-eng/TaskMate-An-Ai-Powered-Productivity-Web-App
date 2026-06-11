@@ -14,34 +14,34 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   final ActivityService _activityService = ActivityService();
-  Map<String, int> _subjectMinutes = {};
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final userId = context.read<AuthService>().user?.uid;
-    if (userId == null) return;
-    final data = await _activityService.getSubjectMinutes(userId);
-    if (mounted) setState(() { _subjectMinutes = data; _isLoading = false; });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final userId = context.watch<AuthService>().user?.uid;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Study Analytics', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
-      body: _isLoading
+      body: userId == null 
           ? const Center(child: CircularProgressIndicator())
-          : _subjectMinutes.isEmpty
-              ? _buildEmptyState()
-              : _buildContent(),
+          : StreamBuilder<Map<String, int>>(
+              stream: _activityService.streamSubjectMinutes(userId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                final subjectMinutes = snapshot.data ?? {};
+                
+                if (subjectMinutes.isEmpty) {
+                  return _buildEmptyState();
+                }
+                
+                return _buildContent(subjectMinutes);
+              },
+            ),
     );
   }
 
@@ -60,7 +60,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Text(
               'Start a Pomodoro session while a task is focused to begin tracking your study time by subject.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.grayLight, height: 1.6),
+              style: TextStyle(color: AppTheme.textMuted, height: 1.6),
             ),
           ],
         ),
@@ -68,9 +68,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildContent() {
-    final total = _subjectMinutes.values.fold(0, (a, b) => a + b);
-    final sortedEntries = _subjectMinutes.entries.toList()
+  Widget _buildContent(Map<String, int> subjectMinutes) {
+    final total = subjectMinutes.values.fold(0, (a, b) => a + b);
+    final sortedEntries = subjectMinutes.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     // Generate colors from a nice palette
@@ -108,14 +108,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Total Study Time', style: TextStyle(color: AppTheme.grayLight, fontSize: 13)),
+                    const Text('Total Study Time', style: TextStyle(color: AppTheme.textMuted, fontSize: 13)),
                     Text(
                       _formatMinutes(total),
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
                     ),
                     Text(
-                      '${_subjectMinutes.length} subject${_subjectMinutes.length != 1 ? 's' : ''} tracked',
-                      style: const TextStyle(color: AppTheme.gray, fontSize: 13),
+                      '${subjectMinutes.length} subject${subjectMinutes.length != 1 ? 's' : ''} tracked',
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
@@ -148,7 +148,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           value: e.value.toDouble(),
                           color: colors[idx % colors.length],
                           title: '${pct.toStringAsFixed(0)}%',
-                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                          titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                           radius: 80,
                         );
                       }).toList(),
@@ -219,7 +219,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             label.length > 6 ? '${label.substring(0, 6)}..' : label,
-                            style: const TextStyle(fontSize: 10, color: AppTheme.gray),
+                            style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
                           ),
                         );
                       },
@@ -229,7 +229,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 40,
-                      getTitlesWidget: (v, m) => Text('${v.toInt()}h', style: const TextStyle(fontSize: 10, color: AppTheme.gray)),
+                      getTitlesWidget: (v, m) => Text('${v.toInt()}h', style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
                     ),
                   ),
                   topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -237,7 +237,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
                 gridData: FlGridData(
                   show: true,
-                  getDrawingHorizontalLine: (_) => FlLine(color: Colors.white.withValues(alpha: 0.05), strokeWidth: 1),
+                  getDrawingHorizontalLine: (_) => FlLine(color: AppTheme.textPrimary.withValues(alpha: 0.05), strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: sortedEntries.asMap().entries.map((entry) {

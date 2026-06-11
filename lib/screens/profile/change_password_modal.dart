@@ -147,7 +147,7 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppTheme.gray)),
+          child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,
@@ -155,7 +155,7 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textPrimary))
               : const Text('Update Password'),
         ),
       ],
@@ -188,7 +188,7 @@ class _PasswordField extends StatelessWidget {
         labelText: label,
         suffixIcon: IconButton(
           icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility,
-              size: 20, color: AppTheme.gray),
+              size: 20, color: AppTheme.textSecondary),
           onPressed: onToggle,
         ),
       ),

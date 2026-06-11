@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String _errorMessage = '';
   String _successMessage = '';
+  bool _isLoading = false;
 
   void _toggleMode() {
     setState(() {
@@ -61,12 +62,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
+    setState(() => _isLoading = true);
+
     try {
       if (isLogin) {
         await authService.login(email, password);
         
         if (!authService.isEmailVerified) {
           _showMessage("Please verify your email before continuing. Check your inbox.", true);
+          setState(() => _isLoading = false);
           return;
         }
 
@@ -77,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (password != confirm) {
           _showMessage("Passwords do not match.", true);
+          setState(() => _isLoading = false);
           return;
         }
 
@@ -100,6 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
       _showMessage(msg, true);
     } catch (e) {
       _showMessage(e.toString(), true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -132,186 +139,175 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 420),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: AppTheme.glass,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 32,
-                    offset: const Offset(0, 8),
-                  )
-                ],
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'TaskMate',
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.primaryLight,
+      backgroundColor: AppTheme.background,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(36),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: AppTheme.border),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'TaskMate',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      color: AppTheme.primary,
+                      fontSize: 42,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Your premium productivity companion',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  if (_errorMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppTheme.dangerSurface,
+                        border: Border.all(color: AppTheme.dangerLight),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: AppTheme.danger),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(_errorMessage, style: const TextStyle(color: AppTheme.danger))),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Your premium productivity companion',
-                      style: TextStyle(
-                        color: AppTheme.grayLight,
-                        fontSize: 16,
+                  
+                  if (_successMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondarySurface,
+                        border: Border.all(color: AppTheme.secondaryLight),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline, color: AppTheme.secondary),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(_successMessage, style: const TextStyle(color: AppTheme.secondary))),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 24),
 
-                    if (_errorMessage.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.danger.withValues(alpha: 0.2),
-                          border: Border.all(color: AppTheme.danger),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: AppTheme.dangerLight),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_errorMessage, style: const TextStyle(color: AppTheme.dangerLight))),
-                          ],
-                        ),
-                      ),
-                    
-                    if (_successMessage.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondary.withValues(alpha: 0.2),
-                          border: Border.all(color: AppTheme.secondary),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle_outline, color: AppTheme.secondaryLight),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_successMessage, style: const TextStyle(color: AppTheme.secondaryLight))),
-                          ],
-                        ),
-                      ),
-
-                    if (!isLogin)
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.person_outline, color: AppTheme.gray),
-                          hintText: 'Full Name',
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-                      ),
-                    if (!isLogin) const SizedBox(height: 16),
-
+                  if (!isLogin) ...[
                     TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: _nameController,
                       decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.email_outlined, color: AppTheme.gray),
-                        hintText: 'Email',
+                        prefixIcon: Icon(Icons.person_outline),
+                        hintText: 'Full Name',
                       ),
-                      validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null,
+                      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: 16),
+                  ],
 
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.email_outlined),
+                      hintText: 'Email',
+                    ),
+                    validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !isPasswordVisible,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      hintText: 'Password',
+                      suffixIcon: IconButton(
+                        icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+                      ),
+                    ),
+                    validator: (value) => value == null || value.length < 6 ? 'Min 6 characters' : null,
+                  ),
+                  
+                  if (!isLogin) ...[
+                    const SizedBox(height: 16),
                     TextFormField(
-                      controller: _passwordController,
-                      obscureText: !isPasswordVisible,
+                      controller: _confirmController,
+                      obscureText: !isConfirmPasswordVisible,
                       decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
-                        hintText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        hintText: 'Confirm Password',
                         suffixIcon: IconButton(
-                          icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: AppTheme.gray),
-                          onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+                          icon: Icon(isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => isConfirmPasswordVisible = !isConfirmPasswordVisible),
                         ),
                       ),
                       validator: (value) => value == null || value.length < 6 ? 'Min 6 characters' : null,
                     ),
-                    const SizedBox(height: 16),
-
-                    if (!isLogin)
-                      TextFormField(
-                        controller: _confirmController,
-                        obscureText: !isConfirmPasswordVisible,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
-                          hintText: 'Confirm Password',
-                          suffixIcon: IconButton(
-                            icon: Icon(isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off, color: AppTheme.gray),
-                            onPressed: () => setState(() => isConfirmPasswordVisible = !isConfirmPasswordVisible),
-                          ),
-                        ),
-                        validator: (value) => value == null || value.length < 6 ? 'Min 6 characters' : null,
-                      ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submit,
-                        child: Text(isLogin ? 'Login' : 'Sign Up'),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          isLogin ? "Don't have an account?" : "Already have an account?",
-                          style: const TextStyle(color: AppTheme.grayLight),
-                        ),
-                        TextButton(
-                          onPressed: _toggleMode,
-                          child: Text(
-                            isLogin ? 'Sign Up' : 'Login',
-                            style: const TextStyle(color: AppTheme.primaryLight, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (isLogin)
-                      TextButton(
-                        onPressed: _forgotPassword,
-                        child: const Text('Forgot Password?', style: TextStyle(color: AppTheme.primaryLight)),
-                      ),
-                    
-                    // Resend verification button is visible conditionally in logic, but here we provide it
-                    if (isLogin && _errorMessage.contains('verify'))
-                      TextButton(
-                        onPressed: _resendVerification,
-                        child: const Text('Resend Verification Email', style: TextStyle(color: AppTheme.primaryLight)),
-                      ),
                   ],
-                ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _submit,
+                      child: _isLoading 
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : Text(isLogin ? 'Login' : 'Sign Up'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isLogin ? "Don't have an account?" : "Already have an account?",
+                        style: const TextStyle(color: AppTheme.textSecondary),
+                      ),
+                      TextButton(
+                        onPressed: _toggleMode,
+                        child: Text(
+                          isLogin ? 'Sign Up' : 'Login',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  if (isLogin)
+                    TextButton(
+                      onPressed: _forgotPassword,
+                      child: const Text('Forgot Password?'),
+                    ),
+                  
+                  if (isLogin && _errorMessage.contains('verify'))
+                    TextButton(
+                      onPressed: _resendVerification,
+                      child: const Text('Resend Verification Email'),
+                    ),
+                ],
               ),
             ),
           ),
