@@ -43,12 +43,14 @@ class ToastController {
   void showWarning(String title, String body) =>
       show(ToastMessage(title: title, body: body, type: ToastType.warning));
 
-  void showAchievement(String title, String body) =>
-      show(ToastMessage(
-          title: title,
-          body: body,
-          type: ToastType.achievement,
-          duration: const Duration(seconds: 5)));
+  void showAchievement(String title, String body) => show(
+    ToastMessage(
+      title: title,
+      body: body,
+      type: ToastType.achievement,
+      duration: const Duration(seconds: 5),
+    ),
+  );
 
   void showInfo(String title, String body) =>
       show(ToastMessage(title: title, body: body, type: ToastType.info));
@@ -151,9 +153,10 @@ class _AnimatedToastState extends State<_AnimatedToast>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeIn));
 
     _ctrl.forward();
 
@@ -169,29 +172,31 @@ class _AnimatedToastState extends State<_AnimatedToast>
     super.dispose();
   }
 
-  Color get _bgColor {
+  // Accent color per type (bar + icon)
+  Color get _accentColor {
     switch (widget.message.type) {
       case ToastType.success:
-        return AppTheme.secondary.withValues(alpha: 0.15);
+        return AppTheme.secondary;
       case ToastType.warning:
-        return AppTheme.accent.withValues(alpha: 0.15);
+        return AppTheme.accent;
       case ToastType.achievement:
-        return const Color(0xFFFFD700).withValues(alpha: 0.15);
+        return const Color(0xFFEAB308); // gold-500
       case ToastType.info:
-        return AppTheme.primary.withValues(alpha: 0.15);
+        return AppTheme.primary;
     }
   }
 
-  Color get _borderColor {
+  // Pastel background for the icon circle
+  Color get _iconBgColor {
     switch (widget.message.type) {
       case ToastType.success:
-        return AppTheme.secondary.withValues(alpha: 0.5);
+        return AppTheme.secondarySurface;
       case ToastType.warning:
-        return AppTheme.accent.withValues(alpha: 0.5);
+        return AppTheme.accentSurface;
       case ToastType.achievement:
-        return const Color(0xFFFFD700).withValues(alpha: 0.5);
+        return const Color(0xFFFEF9C3); // yellow-100
       case ToastType.info:
-        return AppTheme.primary.withValues(alpha: 0.5);
+        return AppTheme.primarySurface;
     }
   }
 
@@ -208,19 +213,6 @@ class _AnimatedToastState extends State<_AnimatedToast>
     }
   }
 
-  Color get _iconColor {
-    switch (widget.message.type) {
-      case ToastType.success:
-        return AppTheme.secondary;
-      case ToastType.warning:
-        return AppTheme.accent;
-      case ToastType.achievement:
-        return const Color(0xFFFFD700);
-      case ToastType.info:
-        return AppTheme.primaryLight;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -229,57 +221,91 @@ class _AnimatedToastState extends State<_AnimatedToast>
         position: _slideAnimation,
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.dark.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _borderColor),
-              boxShadow: [
-                BoxShadow(
-                  color: _iconColor.withValues(alpha: 0.25),
-                  blurRadius: 20,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _bgColor,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 6),
                   ),
-                  child: Icon(_icon, color: _iconColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        widget.message.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (widget.message.body.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.message.body,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.grayLight,
+                      // Left accent stripe
+                      Container(width: 4, color: _accentColor),
+                      // Body
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              // Icon in pastel circle
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _iconBgColor,
+                                ),
+                                child: Icon(
+                                  _icon,
+                                  color: _accentColor,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Title + body
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      widget.message.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13,
+                                        color: AppTheme.textPrimary,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                    if (widget.message.body.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        widget.message.body,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary,
+                                          fontWeight: FontWeight.w400,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
