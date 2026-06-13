@@ -94,7 +94,13 @@ class _GpaTabState extends State<GpaTab> {
   }
 
   Widget _buildGpaForm() {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.border),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -295,13 +301,30 @@ class _GpaTabState extends State<GpaTab> {
         const SizedBox(height: 16),
 
         if (subjects.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Text(
-                'No subjects added yet',
-                style: TextStyle(color: AppTheme.textMuted),
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: const Column(
+              children: [
+                Icon(Icons.school_outlined, size: 48, color: AppTheme.border),
+                SizedBox(height: 12),
+                Text(
+                  'No courses added yet',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Add your first course above to calculate your GPA',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           )
         else
