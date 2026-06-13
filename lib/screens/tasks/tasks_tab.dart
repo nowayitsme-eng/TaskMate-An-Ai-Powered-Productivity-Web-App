@@ -14,6 +14,7 @@ import '../../services/cache_service.dart';
 import '../../theme/app_theme.dart';
 import 'task_history_screen.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/empty_state_widget.dart';
 
 class TasksTab extends StatefulWidget {
   final void Function(TaskModel task)? onFocusTask;
@@ -922,16 +923,12 @@ class _TasksTabState extends State<TasksTab> {
     }
 
     if (filtered.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Text(
-            _filterBy == 'All'
-                ? 'No tasks yet. Add one above!'
-                : 'No tasks match this filter.',
-            style: const TextStyle(color: AppTheme.textSecondary),
-          ),
-        ),
+      return EmptyStateWidget(
+        icon: _filterBy == 'All' ? Icons.check_circle_outline : Icons.filter_alt_off_outlined,
+        title: _filterBy == 'All' ? 'All caught up!' : 'No tasks found',
+        subtitle: _filterBy == 'All' 
+            ? 'You have no pending tasks. Enjoy your free time or add a new task above!'
+            : 'No tasks match the "$_filterBy" filter. Try changing your filters.',
       );
     }
 
@@ -967,10 +964,11 @@ class _TasksTabState extends State<TasksTab> {
             final isOverdue =
                 task.dueDate.isBefore(DateTime.now()) && !task.completed;
 
-            return Padding(
-              // Indent sub-tasks visually
-              padding: EdgeInsets.only(left: task.isSubTask ? 20.0 : 0.0),
-              child: Container(
+            return AnimatedPressable(
+              child: Padding(
+                // Indent sub-tasks visually
+                padding: EdgeInsets.only(left: task.isSubTask ? 20.0 : 0.0),
+                child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: task.completed
@@ -1306,6 +1304,33 @@ class _TasksTabState extends State<TasksTab> {
           const SizedBox(height: 16),
           _buildTaskList(),
         ],
+      ),
+    );
+  }
+}
+
+class AnimatedPressable extends StatefulWidget {
+  final Widget child;
+  const AnimatedPressable({super.key, required this.child});
+
+  @override
+  State<AnimatedPressable> createState() => _AnimatedPressableState();
+}
+
+class _AnimatedPressableState extends State<AnimatedPressable> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => setState(() => _isPressed = true),
+      onPointerUp: (_) => setState(() => _isPressed = false),
+      onPointerCancel: (_) => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+        child: widget.child,
       ),
     );
   }
