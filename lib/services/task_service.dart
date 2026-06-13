@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/task.dart';
 import 'calendar_service.dart';
+import 'notification_service.dart';
 
 class TaskService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -14,10 +15,12 @@ class TaskService {
         .doc(userId)
         .collection('tasks')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
-            .where((task) => !task.isArchived)
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
+              .where((task) => !task.isArchived)
+              .toList(),
+        );
   }
 
   Stream<List<TaskModel>> getArchivedTasks(String providedUserId) {
@@ -27,10 +30,12 @@ class TaskService {
         .doc(userId)
         .collection('tasks')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
-            .where((task) => task.isArchived)
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => TaskModel.fromMap(doc.id, doc.data()))
+              .where((task) => task.isArchived)
+              .toList(),
+        );
   }
 
   Future<String> addTask(String providedUserId, TaskModel task) async {
@@ -48,15 +53,15 @@ class TaskService {
         .collection('users')
         .doc(userId)
         .collection('tasks')
-        .add({
-      ...task.toMap(),
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+        .add({...task.toMap(), 'createdAt': FieldValue.serverTimestamp()});
     return docRef.id;
   }
 
   Future<void> updateTask(
-      String providedUserId, String taskId, Map<String, dynamic> updates) async {
+    String providedUserId,
+    String taskId,
+    Map<String, dynamic> updates,
+  ) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final batch = _db.batch();
     final taskRef = _db
@@ -141,13 +146,22 @@ class TaskService {
 
   Future<void> permanentDeleteTask(String providedUserId, String taskId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
-    final batch = _db.batch();
 
+    // Fetch the task first to get calendarEventId before deletion
     final taskRef = _db
         .collection('users')
         .doc(userId)
         .collection('tasks')
         .doc(taskId);
+
+    final taskDoc = await taskRef.get();
+    String? calendarEventId;
+    if (taskDoc.exists) {
+      final data = taskDoc.data()!;
+      calendarEventId = data['calendarEventId'] as String?;
+    }
+
+    final batch = _db.batch();
     batch.delete(taskRef);
 
     final subtasksSnapshot = await _db
@@ -159,8 +173,16 @@ class TaskService {
 
     for (var doc in subtasksSnapshot.docs) {
       batch.delete(doc.reference);
+      // Cancel notifications for sub-tasks if any
+      NotificationService().cancelTaskReminder(doc.id);
     }
 
     await batch.commit();
+
+    // Cleanup external services
+    NotificationService().cancelTaskReminder(taskId);
+    if (_calendarService.isConnected && calendarEventId != null) {
+      await _calendarService.deleteCalendarEvent(calendarEventId);
+    }
   }
 }
