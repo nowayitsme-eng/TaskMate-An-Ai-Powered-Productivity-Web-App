@@ -37,7 +37,7 @@ class _QuizScreenState extends State<QuizScreen> {
       _answered = false;
       _selectedOption = -1;
     });
-    
+
     if (_currentIndex >= widget.questions.length) {
       final userId = context.read<AuthService>().user?.uid;
       if (userId != null) {
@@ -64,7 +64,10 @@ class _QuizScreenState extends State<QuizScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Interactive Quiz', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Interactive Quiz',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -105,7 +108,11 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             Text(
               'Score: $_score',
-              style: const TextStyle(color: AppTheme.accentLight, fontSize: 14, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppTheme.accentLight,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -120,7 +127,12 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           child: Text(
             q['question'] as String,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.5, color: AppTheme.textPrimary),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+              color: AppTheme.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -152,7 +164,10 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: bgColor,
                       borderRadius: BorderRadius.circular(16),
@@ -165,21 +180,48 @@ class _QuizScreenState extends State<QuizScreen> {
                           height: 32,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _answered && i == correctIndex ? AppTheme.secondary.withValues(alpha: 0.3) : _answered && i == _selectedOption ? AppTheme.danger.withValues(alpha: 0.3) : AppTheme.primarySurface,
+                            color: _answered && i == correctIndex
+                                ? AppTheme.secondary.withValues(alpha: 0.3)
+                                : _answered && i == _selectedOption
+                                ? AppTheme.danger.withValues(alpha: 0.3)
+                                : AppTheme.primarySurface,
                           ),
                           child: Center(
                             child: Text(
                               ['A', 'B', 'C', 'D'][i],
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: AppTheme.textPrimary,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Expanded(child: Text(options[i], style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary, fontWeight: FontWeight.bold))),
+                        Expanded(
+                          child: Text(
+                            options[i],
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                         if (_answered && i == correctIndex)
-                          const Icon(Icons.check_circle, color: AppTheme.secondary, size: 24),
-                        if (_answered && i == _selectedOption && i != correctIndex)
-                          const Icon(Icons.cancel, color: AppTheme.danger, size: 24),
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppTheme.secondary,
+                            size: 24,
+                          ),
+                        if (_answered &&
+                            i == _selectedOption &&
+                            i != correctIndex)
+                          const Icon(
+                            Icons.cancel,
+                            color: AppTheme.danger,
+                            size: 24,
+                          ),
                       ],
                     ),
                   ),
@@ -195,10 +237,14 @@ class _QuizScreenState extends State<QuizScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
             child: Text(
-              _currentIndex + 1 >= widget.questions.length ? 'See Results' : 'Next Question',
+              _currentIndex + 1 >= widget.questions.length
+                  ? 'See Results'
+                  : 'Next Question',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -213,8 +259,8 @@ class _QuizScreenState extends State<QuizScreen> {
     final color = pct >= 80
         ? AppTheme.secondary
         : pct >= 50
-            ? AppTheme.accent
-            : AppTheme.danger;
+        ? AppTheme.accent
+        : AppTheme.danger;
 
     return Center(
       child: Column(
@@ -235,11 +281,17 @@ class _QuizScreenState extends State<QuizScreen> {
                   Text(
                     '$pct%',
                     style: TextStyle(
-                        fontSize: 48, fontWeight: FontWeight.w900, color: color),
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                    ),
                   ),
                   Text(
                     '$_score / $total',
-                    style: TextStyle(fontSize: 16, color: color.withValues(alpha: 0.8)),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: color.withValues(alpha: 0.8),
+                    ),
                   ),
                 ],
               ),
@@ -250,8 +302,8 @@ class _QuizScreenState extends State<QuizScreen> {
             pct >= 80
                 ? '🎉 Excellent Work!'
                 : pct >= 50
-                    ? '👍 Good Job!'
-                    : '📚 Keep Studying!',
+                ? '👍 Good Job!'
+                : '📚 Keep Studying!',
             style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
@@ -269,7 +321,9 @@ class _QuizScreenState extends State<QuizScreen> {
                   label: const Text('Go Back'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
@@ -282,7 +336,9 @@ class _QuizScreenState extends State<QuizScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
