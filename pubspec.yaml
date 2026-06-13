@@ -57,6 +57,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   cloud_functions: ^6.3.2
   url_launcher: ^6.3.2
+  wave: ^0.2.2
 
 dev_dependencies:
   flutter_test:
