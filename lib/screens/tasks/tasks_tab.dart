@@ -1284,7 +1284,7 @@ class _TasksTabState extends State<TasksTab> {
                   ),
                 ),
               ),
-            );
+            ));
           },
         ),
       ],
