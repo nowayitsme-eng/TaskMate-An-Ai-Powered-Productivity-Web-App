@@ -17,9 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Load saved settings before rendering
   final settings = SettingsProvider();
@@ -52,9 +50,8 @@ class TaskMateApp extends StatelessWidget {
       title: 'TaskMate',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      builder: (context, child) => NotificationOverlay(
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) =>
+          NotificationOverlay(child: child ?? const SizedBox.shrink()),
       home: const AuthWrapper(),
     );
   }
@@ -69,9 +66,7 @@ class AuthWrapper extends StatelessWidget {
 
     // Show loading indicator while checking auth state
     if (authService.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // If user is authenticated and verified, show Home
