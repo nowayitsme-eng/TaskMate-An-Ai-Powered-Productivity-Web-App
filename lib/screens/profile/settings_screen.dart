@@ -12,7 +12,10 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Settings',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: ListView(
@@ -62,8 +65,10 @@ class SettingsScreen extends StatelessWidget {
           _SettingsCard(
             child: SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Sound Effects',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              title: const Text(
+                'Sound Effects',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
               subtitle: const Text('Play a sound when Pomodoro sessions end'),
               value: settings.soundEnabled,
               activeThumbColor: AppTheme.primary,
@@ -87,8 +92,14 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5));
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.5,
+      ),
+    );
   }
 }
 
@@ -144,9 +155,20 @@ class _DurationRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -160,8 +182,13 @@ class _DurationRow extends StatelessWidget {
             Container(
               width: 44,
               alignment: Alignment.center,
-              child: Text('$value',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                '$value',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
@@ -169,7 +196,10 @@ class _DurationRow extends StatelessWidget {
               onPressed: value < max ? () => onChanged(value + 1) : null,
             ),
             const SizedBox(width: 4),
-            const Text('min', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const Text(
+              'min',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            ),
           ],
         ),
       ],
