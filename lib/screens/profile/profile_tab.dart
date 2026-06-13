@@ -914,6 +914,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Donut
                         SizedBox(
@@ -1000,20 +1001,20 @@ class _ProfileTabState extends State<ProfileTab> {
                   },
                 ),
 
-                const SizedBox(height: 20),
-                const Divider(color: AppTheme.border),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
 
                 // ── Bar chart by subject ──
-                const Text(
-                  'Hours by Subject',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary,
+                const Center(
+                  child: Text(
+                    'Hours by Subject',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
 
                 Builder(
                   builder: (context) {
