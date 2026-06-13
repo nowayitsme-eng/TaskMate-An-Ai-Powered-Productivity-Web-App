@@ -26,9 +26,10 @@ class SummaryScreen extends StatelessWidget {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: AppTheme.border),
+            boxShadow: AppTheme.cardShadow,
           ),
           padding: const EdgeInsets.all(32),
           child: SingleChildScrollView(
