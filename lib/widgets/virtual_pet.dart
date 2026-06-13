@@ -86,6 +86,7 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
   late AnimationController _shakeController;
 
   late Animation<double> _breatheAnimation;
+  late Animation<double> _hoverAnimation;
   late Animation<double> _shakeAnimation;
 
   @override
@@ -103,6 +104,10 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
     );
 
     _breatheAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _breatheController, curve: Curves.easeInOutSine),
+    );
+
+    _hoverAnimation = Tween<double>(begin: -3, end: 3).animate(
       CurvedAnimation(parent: _breatheController, curve: Curves.easeInOutSine),
     );
 
@@ -215,6 +220,7 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
       animation: Listenable.merge([_breatheController, _shakeController]),
       builder: (context, child) {
         double dx = 0;
+        double dy = 0;
         double scale = 1.0;
 
         if (_mood == PetMood.stressed) dx = _shakeAnimation.value;
@@ -222,10 +228,11 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
             _mood == PetMood.thriving ||
             _mood == PetMood.neutral) {
           scale = _breatheAnimation.value;
+          dy = _hoverAnimation.value;
         }
 
         return Transform.translate(
-          offset: Offset(dx, 0),
+          offset: Offset(dx, dy),
           child: Transform.scale(
             scale: scale,
             child: Container(
