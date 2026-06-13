@@ -20,8 +20,45 @@ class _AiChatTabState extends State<AiChatTab> {
   bool _isLoading = false;
 
   final List<Map<String, String>> _history = [
-    {"role": "system", "content": "You are TaskMate, a helpful AI assistant. Always reply in English only."}
+    {
+      "role": "system",
+      "content":
+          "You are TaskMate, a helpful AI assistant. Always reply in English only.",
+    },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadHistory();
+    });
+  }
+
+  Future<void> _loadHistory() async {
+    final userId = context.read<AuthService>().user?.uid;
+    if (userId == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final messages = await _aiService.getChatHistory(userId).first;
+      if (messages.isNotEmpty) {
+        setState(() {
+          for (var msg in messages) {
+            final role = msg['role'] as String?;
+            final content = msg['content'] as String?;
+            if (role != null && content != null) {
+              _history.add({"role": role, "content": content});
+            }
+          }
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -59,15 +96,14 @@ class _AiChatTabState extends State<AiChatTab> {
 
     try {
       final response = await _aiService.getAiResponse(_history);
-      
+
       _history.add({"role": "assistant", "content": response});
       await _aiService.saveMessage(userId, 'assistant', response);
-      
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -101,8 +137,12 @@ class _AiChatTabState extends State<AiChatTab> {
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
-            bottomLeft: isUser ? const Radius.circular(18) : const Radius.circular(4),
-            bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(18),
+            bottomLeft: isUser
+                ? const Radius.circular(18)
+                : const Radius.circular(4),
+            bottomRight: isUser
+                ? const Radius.circular(4)
+                : const Radius.circular(18),
           ),
         ),
         child: MarkdownBody(
@@ -112,14 +152,18 @@ class _AiChatTabState extends State<AiChatTab> {
           onTapLink: (text, href, title) async {
             if (href == null) return;
             final uri = Uri.tryParse(href);
-            if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+            if (uri != null &&
+                (uri.scheme == 'http' || uri.scheme == 'https')) {
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
             }
           },
           styleSheet: MarkdownStyleSheet(
-            p: TextStyle(color: isUser ? AppTheme.primaryDark : AppTheme.textPrimary, fontSize: 16),
+            p: TextStyle(
+              color: isUser ? AppTheme.primaryDark : AppTheme.textPrimary,
+              fontSize: 16,
+            ),
             codeblockDecoration: BoxDecoration(
               color: AppTheme.background,
               borderRadius: BorderRadius.circular(8),
@@ -141,7 +185,9 @@ class _AiChatTabState extends State<AiChatTab> {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Card(elevation: 0, color: Colors.transparent,
+      child: Card(
+        elevation: 0,
+        color: Colors.transparent,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -153,14 +199,23 @@ class _AiChatTabState extends State<AiChatTab> {
                     children: const [
                       Icon(Icons.smart_toy, color: AppTheme.primaryLight),
                       SizedBox(width: 8),
-                      Text('AI Assistant', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text(
+                        'AI Assistant',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   TextButton.icon(
                     onPressed: _clearChat,
                     icon: const Icon(Icons.delete, color: AppTheme.dangerLight),
-                    label: const Text('Clear Chat', style: TextStyle(color: AppTheme.dangerLight)),
-                  )
+                    label: const Text(
+                      'Clear Chat',
+                      style: TextStyle(color: AppTheme.dangerLight),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -177,11 +232,13 @@ class _AiChatTabState extends State<AiChatTab> {
                           stream: _aiService.getChatHistory(userId),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
-                              return const Center(child: CircularProgressIndicator());
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
                             }
 
                             final messages = snapshot.data!;
-                            
+
                             // Initialize with welcome if empty
                             if (messages.isEmpty) {
                               return ListView(
@@ -189,13 +246,16 @@ class _AiChatTabState extends State<AiChatTab> {
                                 children: [
                                   _buildMessageBubble({
                                     'role': 'assistant',
-                                    'content': "Hello! I'm your AI productivity assistant. Ask me anything about time management, study techniques, or productivity hacks!"
+                                    'content':
+                                        "Hello! I'm your AI productivity assistant. Ask me anything about time management, study techniques, or productivity hacks!",
                                   }),
                                 ],
                               );
                             }
 
-                            WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                            WidgetsBinding.instance.addPostFrameCallback(
+                              (_) => _scrollToBottom(),
+                            );
 
                             return ListView.builder(
                               controller: _scrollController,
@@ -224,26 +284,60 @@ class _AiChatTabState extends State<AiChatTab> {
                           borderRadius: BorderRadius.circular(50),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
                         counterText: "",
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppTheme.primary,
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(color: AppTheme.textPrimary, strokeWidth: 2),
-                          )
-                        : IconButton(
-                            icon: const Icon(Icons.send, color: AppTheme.textPrimary),
-                            onPressed: _sendMessage,
-                          ),
+                  Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primary.withValues(alpha: 0.8),
+                          AppTheme.primaryDark,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _isLoading ? null : _sendMessage,
+                        child: Center(
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppTheme.textPrimary,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.send,
+                                  color: AppTheme.textPrimary,
+                                  size: 20,
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
