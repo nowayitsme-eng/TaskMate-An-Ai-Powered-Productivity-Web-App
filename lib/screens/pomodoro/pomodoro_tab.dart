@@ -10,6 +10,8 @@ import '../../services/gamification_service.dart';
 import '../../services/activity_service.dart';
 import '../../services/messaging_service.dart';
 import '../../theme/app_theme.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class PomodoroTab extends StatefulWidget {
   final TaskModel? focusedTask;
@@ -273,6 +275,23 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  int get _totalTime {
+    if (_isWorkTime) {
+      return (int.tryParse(_workDurationController.text) ?? 25) * 60;
+    } else {
+      final isLongBreak = _sessionCount > 0 &&
+          _sessionCount %
+                  (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) ==
+              0;
+      return isLongBreak
+          ? (int.tryParse(_longBreakDurationController.text) ?? 15) * 60
+          : (int.tryParse(_breakDurationController.text) ?? 5) * 60;
+    }
+  }
+
+  double get _progress => (_timeLeft / (_totalTime == 0 ? 1 : _totalTime)).clamp(0.0, 1.0);
+
+
   String get _modeText {
     if (_isWorkTime) return 'WORK';
     final isLongBreak =
@@ -395,27 +414,80 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                       ),
                       const SizedBox(height: 40),
 
-                      Text(
-                        _modeText,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4,
-                          color: _modeColor,
+                      // Fluid Wave Timer Visual
+                      Container(
+                        width: 280,
+                        height: 280,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.background,
+                          boxShadow: [
+                            BoxShadow(
+                              color: _modeColor.withValues(alpha: 0.15),
+                              blurRadius: 40,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                          border: Border.all(
+                            color: AppTheme.border,
+                            width: 8,
+                          ),
+                        ),
+                        child: ClipOval(
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // The fluid wave filling
+                              Positioned.fill(
+                                child: WaveWidget(
+                                  config: CustomConfig(
+                                    colors: [
+                                      _modeColor.withValues(alpha: 0.2),
+                                      _modeColor.withValues(alpha: 0.4),
+                                      _modeColor.withValues(alpha: 0.6),
+                                    ],
+                                    durations: [18000, 12000, 8000],
+                                    heightPercentages: [
+                                      (1.0 - _progress - 0.02).clamp(0.0, 1.0),
+                                      (1.0 - _progress).clamp(0.0, 1.0),
+                                      (1.0 - _progress + 0.02).clamp(0.0, 1.0),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.transparent,
+                                  size: const Size(double.infinity, double.infinity),
+                                  waveAmplitude: 0,
+                                ),
+                              ),
+                              // The timer text overlay
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _modeText,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 4,
+                                      color: _modeColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _timerDisplay,
+                                    style: const TextStyle(
+                                      fontSize: 64,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Courier',
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      Text(
-                        _timerDisplay,
-                        style: const TextStyle(
-                          fontSize: 80,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Courier',
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 48),
 
                       Wrap(
                         alignment: WrapAlignment.center,
