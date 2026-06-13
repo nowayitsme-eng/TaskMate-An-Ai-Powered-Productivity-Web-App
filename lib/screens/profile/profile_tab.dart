@@ -10,7 +10,7 @@ import '../../widgets/notification_toast.dart';
 import '../../widgets/activity_heatmap.dart';
 import 'settings_screen.dart';
 import 'change_password_modal.dart';
-import 'analytics_screen.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../widgets/skeleton_loader.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -57,7 +57,8 @@ class _ProfileTabState extends State<ProfileTab> {
     return StreamBuilder<UserProfile>(
       stream: _gamService.getUserProfile(userId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -70,17 +71,25 @@ class _ProfileTabState extends State<ProfileTab> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    Expanded(
+                      child: const SkeletonLoader(height: 80, borderRadius: 16),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    Expanded(
+                      child: const SkeletonLoader(height: 80, borderRadius: 16),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    Expanded(
+                      child: const SkeletonLoader(height: 80, borderRadius: 16),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: const SkeletonLoader(height: 80, borderRadius: 16)),
+                    Expanded(
+                      child: const SkeletonLoader(height: 80, borderRadius: 16),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -114,7 +123,7 @@ class _ProfileTabState extends State<ProfileTab> {
               const SizedBox(height: 32),
               _buildHeatmapCard(userId),
               const SizedBox(height: 24),
-              _buildAnalyticsCard(),
+              _buildAnalyticsCard(userId),
               const SizedBox(height: 32),
               _buildSettingsList(),
               const SizedBox(height: 40),
@@ -127,7 +136,8 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Widget _buildProfileCard(UserProfile profile) {
     final userId = context.read<AuthService>().user?.uid ?? '';
-    final defaultName = context.read<AuthService>().user?.email?.split('@').first ?? 'User';
+    final defaultName =
+        context.read<AuthService>().user?.email?.split('@').first ?? 'User';
     final userName = profile.displayName ?? defaultName;
 
     return Container(
@@ -163,7 +173,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       color: const Color(0xFF86EFAC).withValues(alpha: 0.6),
                       blurRadius: 20,
                       offset: const Offset(0, 6),
-                    )
+                    ),
                   ],
                 ),
                 child: const Center(
@@ -211,7 +221,11 @@ class _ProfileTabState extends State<ProfileTab> {
                     color: AppTheme.surface.withValues(alpha: 0.7),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.edit_rounded, size: 16, color: AppTheme.primary),
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    size: 16,
+                    color: AppTheme.primary,
+                  ),
                 ),
               ),
             ],
@@ -226,11 +240,19 @@ class _ProfileTabState extends State<ProfileTab> {
                 children: [
                   Text(
                     'Level ${profile.level} Progress',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                   Text(
                     '${profile.xpInCurrentLevel} / ${profile.xpForNextLevel} XP',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
                   ),
                 ],
               ),
@@ -241,7 +263,9 @@ class _ProfileTabState extends State<ProfileTab> {
                   value: profile.levelProgress,
                   minHeight: 10,
                   backgroundColor: Colors.white.withValues(alpha: 0.6),
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.primary,
+                  ),
                 ),
               ),
             ],
@@ -305,11 +329,19 @@ class _ProfileTabState extends State<ProfileTab> {
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: textColor),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: textColor,
+            ),
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: textColor.withValues(alpha: 0.8), fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 10,
+              color: textColor.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -372,7 +404,9 @@ class _ProfileTabState extends State<ProfileTab> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
-                          color: earned ? AppTheme.primaryDark : AppTheme.textMuted,
+                          color: earned
+                              ? AppTheme.primaryDark
+                              : AppTheme.textMuted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -380,7 +414,10 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                     if (earned)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFD3DDFB),
                           borderRadius: BorderRadius.circular(4),
@@ -435,7 +472,9 @@ class _ProfileTabState extends State<ProfileTab> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isConnected ? const Color(0xFFE6F4EA) : AppTheme.background,
+                color: isConnected
+                    ? const Color(0xFFE6F4EA)
+                    : AppTheme.background,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -443,7 +482,9 @@ class _ProfileTabState extends State<ProfileTab> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: isConnected ? const Color(0xFF1E8E3E) : AppTheme.textSecondary,
+                  color: isConnected
+                      ? const Color(0xFF1E8E3E)
+                      : AppTheme.textSecondary,
                 ),
               ),
             ),
@@ -507,7 +548,9 @@ class _ProfileTabState extends State<ProfileTab> {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => Dialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
@@ -521,13 +564,20 @@ class _ProfileTabState extends State<ProfileTab> {
                         const SizedBox(height: 12),
                         const Text(
                           'Sign Out?',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppTheme.textPrimary),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         const Text(
                           'You can always sign back in to continue your progress.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -536,11 +586,23 @@ class _ProfileTabState extends State<ProfileTab> {
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(ctx, false),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  side: const BorderSide(color: AppTheme.border),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  side: const BorderSide(
+                                    color: AppTheme.border,
+                                  ),
                                 ),
-                                child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -549,10 +611,17 @@ class _ProfileTabState extends State<ProfileTab> {
                                 onPressed: () => Navigator.pop(ctx, true),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.danger,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w800)),
+                                child: const Text(
+                                  'Sign Out',
+                                  style: TextStyle(fontWeight: FontWeight.w800),
+                                ),
                               ),
                             ),
                           ],
@@ -665,52 +734,406 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  Widget _buildAnalyticsCard() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
-      ),
-      child: Container(
-        height: 200,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: AppTheme.cardShadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Study Analytics (Focus Hours)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: AppTheme.textPrimary,
+  Widget _buildAnalyticsCard(String userId) {
+    final colors = [
+      AppTheme.primary,
+      AppTheme.secondary,
+      AppTheme.accent,
+      const Color(0xFFEC4899),
+      const Color(0xFF3B82F6),
+      const Color(0xFF14B8A6),
+      const Color(0xFFF97316),
+    ];
+
+    return StreamBuilder<Map<String, int>>(
+      stream: _activityService.streamSubjectMinutes(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: const Center(
+              heightFactor: 3,
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final subjectMinutes = snapshot.data ?? {};
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header ──
+              const Text(
+                'Study Analytics',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((day) {
-                return Text(
-                  day,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textMuted,
+              const SizedBox(height: 16),
+
+              if (subjectMinutes.isEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: const Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.bar_chart_rounded,
+                          size: 48,
+                          color: AppTheme.border,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'No study data yet',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Start a focus session to see analytics',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
+                ),
+              ] else ...[
+                // ── Total Study Time summary ──
+                Builder(
+                  builder: (context) {
+                    final total = subjectMinutes.values.fold(
+                      0,
+                      (a, b) => a + b,
+                    );
+                    final h = total ~/ 60;
+                    final m = total % 60;
+                    final formatted = h == 0 ? '${m}m' : '${h}h ${m}m';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primary.withValues(alpha: 0.12),
+                            AppTheme.primaryDark.withValues(alpha: 0.06),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppTheme.primarySurface,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.menu_book_rounded,
+                              color: AppTheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Total Study Time',
+                                style: TextStyle(
+                                  color: AppTheme.textMuted,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                formatted,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${subjectMinutes.length} subject${subjectMinutes.length != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Donut chart + legend ──
+                Builder(
+                  builder: (context) {
+                    final total = subjectMinutes.values.fold(
+                      0,
+                      (a, b) => a + b,
+                    );
+                    final sortedEntries = subjectMinutes.entries.toList()
+                      ..sort((a, b) => b.value.compareTo(a.value));
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Donut
+                        SizedBox(
+                          height: 160,
+                          width: 160,
+                          child: PieChart(
+                            PieChartData(
+                              sectionsSpace: 3,
+                              centerSpaceRadius: 38,
+                              sections: sortedEntries.asMap().entries.map((e) {
+                                final pct = e.value.value / total * 100;
+                                return PieChartSectionData(
+                                  value: e.value.value.toDouble(),
+                                  color: colors[e.key % colors.length],
+                                  title: pct >= 10
+                                      ? '${pct.toStringAsFixed(0)}%'
+                                      : '',
+                                  titleStyle: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  radius: 55,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Legend
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: sortedEntries.asMap().entries.take(7).map(
+                              (entry) {
+                                final idx = entry.key;
+                                final e = entry.value;
+                                final mins = e.value;
+                                final h = mins ~/ 60;
+                                final m = mins % 60;
+                                final timeStr = h > 0 ? '${h}h ${m}m' : '${m}m';
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: colors[idx % colors.length],
+                                          borderRadius: BorderRadius.circular(
+                                            3,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          e.key,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textSecondary,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        timeStr,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppTheme.textMuted,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ).toList(),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 20),
+                const Divider(color: AppTheme.border),
+                const SizedBox(height: 16),
+
+                // ── Bar chart by subject ──
+                const Text(
+                  'Hours by Subject',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Builder(
+                  builder: (context) {
+                    final sortedEntries = subjectMinutes.entries.toList()
+                      ..sort((a, b) => b.value.compareTo(a.value));
+                    final maxHours =
+                        (sortedEntries.first.value / 60).ceil().toDouble() +
+                        0.5;
+
+                    return SizedBox(
+                      height: 180,
+                      child: BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: maxHours,
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (_) => AppTheme.dark,
+                              getTooltipItem: (group, groupIdx, rod, rodIdx) {
+                                final entry = sortedEntries[group.x];
+                                final mins = entry.value;
+                                final h = mins ~/ 60;
+                                final m = mins % 60;
+                                return BarTooltipItem(
+                                  '${entry.key}\n${h > 0 ? '${h}h ${m}m' : '${m}m'}',
+                                  const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final idx = value.toInt();
+                                  if (idx < 0 || idx >= sortedEntries.length) {
+                                    return const SizedBox();
+                                  }
+                                  final label = sortedEntries[idx].key;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      label.length > 5
+                                          ? label.substring(0, 5)
+                                          : label,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 32,
+                                getTitlesWidget: (v, m) => Text(
+                                  '${v.toInt()}h',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                          ),
+                          gridData: FlGridData(
+                            show: true,
+                            getDrawingHorizontalLine: (_) =>
+                                FlLine(color: AppTheme.border, strokeWidth: 1),
+                            drawVerticalLine: false,
+                          ),
+                          borderData: FlBorderData(show: false),
+                          barGroups: sortedEntries.asMap().entries.map((entry) {
+                            return BarChartGroupData(
+                              x: entry.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: entry.value.value / 60,
+                                  color: colors[entry.key % colors.length],
+                                  width: 20,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(6),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Future<void> _editUsername(BuildContext context, String userId, String currentName) async {
+  Future<void> _editUsername(
+    BuildContext context,
+    String userId,
+    String currentName,
+  ) async {
     final controller = TextEditingController(text: currentName);
     final newName = await showDialog<String>(
       context: context,
@@ -735,7 +1158,11 @@ class _ProfileTabState extends State<ProfileTab> {
                       color: AppTheme.primarySurface,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.edit_rounded, color: AppTheme.primary, size: 22),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      color: AppTheme.primary,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
@@ -770,7 +1197,10 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AppTheme.primary, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -782,10 +1212,18 @@ class _ProfileTabState extends State<ProfileTab> {
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: const BorderSide(color: AppTheme.border),
                       ),
-                      child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -794,10 +1232,16 @@ class _ProfileTabState extends State<ProfileTab> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.w800)),
+                      onPressed: () =>
+                          Navigator.pop(ctx, controller.text.trim()),
+                      child: const Text(
+                        'Save',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
                     ),
                   ),
                 ],
@@ -825,7 +1269,9 @@ class _ProfileTabState extends State<ProfileTab> {
         return StatefulBuilder(
           builder: (context, setState) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
               child: Container(
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
@@ -846,7 +1292,11 @@ class _ProfileTabState extends State<ProfileTab> {
                             color: AppTheme.dangerSurface,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.delete_forever_rounded, color: AppTheme.danger, size: 22),
+                          child: const Icon(
+                            Icons.delete_forever_rounded,
+                            color: AppTheme.danger,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         const Expanded(
@@ -867,17 +1317,27 @@ class _ProfileTabState extends State<ProfileTab> {
                       decoration: BoxDecoration(
                         color: AppTheme.dangerSurface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.dangerLight.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: AppTheme.dangerLight.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: const Text(
                         '⚠️ This action cannot be undone. All your tasks, XP, badges, and heatmap data will be permanently deleted.',
-                        style: TextStyle(color: AppTheme.danger, fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          color: AppTheme.danger,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
                       'Enter your password to confirm:',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
@@ -898,7 +1358,10 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AppTheme.danger, width: 2),
+                          borderSide: const BorderSide(
+                            color: AppTheme.danger,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -906,7 +1369,11 @@ class _ProfileTabState extends State<ProfileTab> {
                       const SizedBox(height: 8),
                       Text(
                         errorMessage,
-                        style: const TextStyle(color: AppTheme.danger, fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: AppTheme.danger,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 20),
@@ -917,11 +1384,21 @@ class _ProfileTabState extends State<ProfileTab> {
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 side: const BorderSide(color: AppTheme.border),
                               ),
-                              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w700)),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ),
                         if (!isLoading) const SizedBox(width: 12),
@@ -930,14 +1407,19 @@ class _ProfileTabState extends State<ProfileTab> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.danger,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             onPressed: isLoading
                                 ? null
                                 : () async {
                                     final pwd = passwordController.text;
                                     if (pwd.isEmpty) {
-                                      setState(() => errorMessage = 'Password is required');
+                                      setState(
+                                        () => errorMessage =
+                                            'Password is required',
+                                      );
                                       return;
                                     }
                                     setState(() {
@@ -951,15 +1433,30 @@ class _ProfileTabState extends State<ProfileTab> {
                                     } catch (e) {
                                       setState(() {
                                         isLoading = false;
-                                        errorMessage = e.toString().contains('wrong-password')
+                                        errorMessage =
+                                            e.toString().contains(
+                                              'wrong-password',
+                                            )
                                             ? 'Incorrect password.'
                                             : 'Failed to delete account. Please try again.';
                                       });
                                     }
                                   },
                             child: isLoading
-                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                : const Text('Delete Permanently', style: TextStyle(fontWeight: FontWeight.w800)),
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Delete Permanently',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
