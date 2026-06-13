@@ -93,7 +93,7 @@ class _QuizScreenState extends State<QuizScreen> {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: (_currentIndex + 1) / total,
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            backgroundColor: AppTheme.border,
             valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
             minHeight: 8,
           ),
