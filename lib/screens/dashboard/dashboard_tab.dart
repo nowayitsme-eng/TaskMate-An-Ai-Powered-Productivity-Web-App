@@ -12,6 +12,7 @@ import '../../services/activity_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/virtual_pet.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/empty_state_widget.dart';
 
 class DashboardTab extends StatefulWidget {
   final void Function(int tabIndex) onNavigateToTab;
@@ -244,29 +245,12 @@ class _DashboardTabState extends State<DashboardTab> {
 
               // Empty state
               if (tasks.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 64),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.rocket_launch,
-                          size: 64,
-                          color: AppTheme.primary.withValues(alpha: 0.2),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Your slate is clean!',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Add a task to get started.',
-                          style: TextStyle(color: AppTheme.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
+                EmptyStateWidget(
+                  icon: Icons.rocket_launch_rounded,
+                  title: 'Your slate is clean!',
+                  subtitle: 'Add a task to get started and keep your momentum going.',
+                  actionLabel: 'New Task',
+                  onAction: () => widget.onNavigateToTab(1),
                 ),
             ],
           ),
