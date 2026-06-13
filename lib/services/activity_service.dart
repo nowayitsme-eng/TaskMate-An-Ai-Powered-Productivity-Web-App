@@ -22,8 +22,8 @@ class ActivityService {
         key: {
           'tasksCompleted': FieldValue.increment(tasksCompleted),
           'pomodoroMinutes': FieldValue.increment(pomodoroMinutes),
-        }
-      }
+        },
+      },
     };
 
     // Track per-subject pomodoro minutes for analytics
@@ -43,7 +43,7 @@ class ActivityService {
     try {
       final doc = await _db.collection('users').doc(userId).get();
       if (!doc.exists) return {};
-      
+
       final data = doc.data() as Map<String, dynamic>;
       final activityData = data['activityMap'] as Map<String, dynamic>? ?? {};
 
