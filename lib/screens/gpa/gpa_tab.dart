@@ -50,16 +50,18 @@ class _GpaTabState extends State<GpaTab> {
     final gradeValue = _selectedGrade;
 
     if (name.isEmpty || creditsStr.isEmpty || gradeValue == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('All fields are required!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('All fields are required!')));
       return;
     }
 
     final credits = double.tryParse(creditsStr);
     if (credits == null || credits <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credits must be a valid positive number!')),
+        const SnackBar(
+          content: Text('Credits must be a valid positive number!'),
+        ),
       );
       return;
     }
@@ -84,9 +86,9 @@ class _GpaTabState extends State<GpaTab> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save subject: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save subject: $e')));
       }
     }
   }
@@ -108,52 +110,96 @@ class _GpaTabState extends State<GpaTab> {
                   child: const Icon(Icons.calculate, color: AppTheme.primary),
                 ),
                 const SizedBox(width: 12),
-                const Text('GPA Calculator', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                const Text(
+                  'GPA Calculator',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(hintText: 'Subject Name'),
+            SizedBox(
+              height: 48,
+              child: TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(hintText: 'Subject Name'),
+              ),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   flex: 2,
-                  child: DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    initialValue: _selectedGrade,
-                    decoration: const InputDecoration(hintText: 'Grade'),
-                    dropdownColor: AppTheme.surface,
-                    items: _gradeMap.keys.map((key) {
-                      return DropdownMenuItem(
-                        value: key,
-                        child: Text('${_gradeLabels[key]} ($key)'),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedGrade = value),
+                  child: SizedBox(
+                    height: 48,
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedGrade,
+                      decoration: const InputDecoration(hintText: 'Grade'),
+                      dropdownColor: AppTheme.surface,
+                      items: _gradeMap.keys.map((key) {
+                        return DropdownMenuItem(
+                          value: key,
+                          child: Text('${_gradeLabels[key]} ($key)'),
+                        );
+                      }).toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedGrade = value),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: TextField(
-                    controller: _creditsController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(hintText: 'Credits'),
+                  child: SizedBox(
+                    height: 48,
+                    child: TextField(
+                      controller: _creditsController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(hintText: 'Credits'),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _addSubject,
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.8),
+                        AppTheme.primaryDark,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: const Icon(Icons.add, size: 24),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _addSubject,
+                      child: const Center(
+                        child: Icon(
+                          Icons.add,
+                          color: AppTheme.textPrimary,
+                          size: 26,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -198,8 +244,12 @@ class _GpaTabState extends State<GpaTab> {
           child: Column(
             children: [
               Text(
-                'Your Cumulative GPA', 
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: gpaColor)
+                'Your Cumulative GPA',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: gpaColor,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
@@ -212,29 +262,46 @@ class _GpaTabState extends State<GpaTab> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Based on $totalCredits credit hours', 
-                  style: TextStyle(color: gpaColor, fontSize: 13, fontWeight: FontWeight.w500)
+                  'Based on $totalCredits credit hours',
+                  style: TextStyle(
+                    color: gpaColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        
+
         const SizedBox(height: 32),
-        const Text('Course List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const Text(
+          'Course List',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         const SizedBox(height: 16),
 
         if (subjects.isEmpty)
           const Center(
             child: Padding(
               padding: EdgeInsets.all(32.0),
-              child: Text('No subjects added yet', style: TextStyle(color: AppTheme.textMuted)),
+              child: Text(
+                'No subjects added yet',
+                style: TextStyle(color: AppTheme.textMuted),
+              ),
             ),
           )
         else
@@ -258,32 +325,45 @@ class _GpaTabState extends State<GpaTab> {
                   child: Row(
                     children: [
                       Expanded(
-                        flex: 2, 
+                        flex: 2,
                         child: Text(
-                          sub.name, 
-                          style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)
-                        )
+                          sub.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primarySurface,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          sub.grade, 
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)
+                          sub.grade,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        '${sub.credits} cr', 
-                        style: const TextStyle(color: AppTheme.textSecondary)
+                        '${sub.credits} cr',
+                        style: const TextStyle(color: AppTheme.textSecondary),
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: AppTheme.dangerLight),
-                        onPressed: () => _gpaService.deleteSubject(userId, sub.id),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppTheme.dangerLight,
+                        ),
+                        onPressed: () =>
+                            _gpaService.deleteSubject(userId, sub.id),
                       ),
                     ],
                   ),
@@ -298,7 +378,7 @@ class _GpaTabState extends State<GpaTab> {
   @override
   Widget build(BuildContext context) {
     final userId = context.watch<AuthService>().user?.uid;
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20.0),
       child: Column(
