@@ -76,82 +76,85 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        body: SafeArea(
-          child: IndexedStack(index: _currentIndex, children: tabs),
+        extendBody: true, // Allow body to scroll behind the nav bar
+        body: IndexedStack(index: _currentIndex, children: tabs),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.surface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: AppTheme.border.withValues(alpha: 0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 8),
+                  )
+                ]
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildNavItem(Icons.dashboard_rounded, 0),
+                  _buildNavItem(Icons.task_alt, 1),
+                  _buildNavItem(Icons.timer_outlined, 2),
+                  _buildNavItem(Icons.calculate_outlined, 3),
+                  _buildNavItem(Icons.smart_toy_outlined, 4),
+                  _buildNavItem(Icons.school_outlined, 5),
+                  _buildNavItem(Icons.person_outline, 6),
+                ],
+              ),
+            ),
+          ),
         ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => _navigateToTab(index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 44,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.all(isSelected ? 6 : 0),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected ? AppTheme.primary : AppTheme.textMuted,
+                  size: 24,
+                ),
+              ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutBack,
+              height: 4,
+              width: isSelected ? 16 : 0,
+              decoration: BoxDecoration(
+                color: AppTheme.primary,
+                borderRadius: BorderRadius.circular(2),
               ),
-            ],
-          ),
-          child: SafeArea(
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
-              backgroundColor: Colors.transparent,
-              selectedItemColor: AppTheme.primary,
-              unselectedItemColor: AppTheme.textMuted,
-              type: BottomNavigationBarType.fixed,
-              elevation: 0,
-              selectedFontSize: 11,
-              unselectedFontSize: 10,
-              selectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-              ),
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard_rounded),
-                  activeIcon: Icon(Icons.dashboard_rounded),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.task_alt),
-                  activeIcon: Icon(Icons.task_alt),
-                  label: 'Tasks',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.timer_outlined),
-                  activeIcon: Icon(Icons.timer),
-                  label: 'Focus',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.calculate_outlined),
-                  activeIcon: Icon(Icons.calculate),
-                  label: 'GPA',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.smart_toy_outlined),
-                  activeIcon: Icon(Icons.smart_toy),
-                  label: 'AI Chat',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.school_outlined),
-                  activeIcon: Icon(Icons.school),
-                  label: 'Study',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
-            ),
-          ),
+            )
+          ],
         ),
       ),
     );
