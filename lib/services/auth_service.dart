@@ -34,10 +34,8 @@ class AuthService extends ChangeNotifier {
 
   Future<void> signUp(String name, String email, String password) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       // Send verification email
       await userCredential.user?.sendEmailVerification();
@@ -86,7 +84,8 @@ class AuthService extends ChangeNotifier {
 
   Future<void> deleteAccount(String password) async {
     final user = _auth.currentUser;
-    if (user == null || user.email == null) throw Exception("No user logged in");
+    if (user == null || user.email == null)
+      throw Exception("No user logged in");
 
     try {
       // 1. Re-authenticate (Required by Firebase before deletion)
@@ -99,14 +98,24 @@ class AuthService extends ChangeNotifier {
       // 2. Wipe Firestore Data (Subcollections)
       final subcollections = ['tasks', 'chat', 'insights'];
       for (final sub in subcollections) {
-        var snapshot = await _db.collection('users').doc(user.uid).collection(sub).limit(500).get();
+        var snapshot = await _db
+            .collection('users')
+            .doc(user.uid)
+            .collection(sub)
+            .limit(500)
+            .get();
         while (snapshot.docs.isNotEmpty) {
           final batch = _db.batch();
           for (var doc in snapshot.docs) {
             batch.delete(doc.reference);
           }
           await batch.commit();
-          snapshot = await _db.collection('users').doc(user.uid).collection(sub).limit(500).get();
+          snapshot = await _db
+              .collection('users')
+              .doc(user.uid)
+              .collection(sub)
+              .limit(500)
+              .get();
         }
       }
 
