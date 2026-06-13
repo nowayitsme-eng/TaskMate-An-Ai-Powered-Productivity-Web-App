@@ -17,7 +17,8 @@ class SkeletonLoader extends StatefulWidget {
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
 }
 
-class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProviderStateMixin {
+class _SkeletonLoaderState extends State<SkeletonLoader>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Color?> _colorAnimation;
 
@@ -28,7 +29,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    
+
     _colorAnimation = ColorTween(
       begin: AppTheme.border.withValues(alpha: 0.3),
       end: AppTheme.border.withValues(alpha: 0.8),
