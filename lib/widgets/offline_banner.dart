@@ -75,7 +75,10 @@ class _OfflineBannerState extends State<OfflineBanner>
               child: Material(
                 color: Colors.transparent,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color(0xFF7F1D1D), // deep red
                     gradient: LinearGradient(
@@ -87,7 +90,11 @@ class _OfflineBannerState extends State<OfflineBanner>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.wifi_off, size: 16, color: AppTheme.dangerLight),
+                        Icon(
+                          Icons.wifi_off,
+                          size: 16,
+                          color: AppTheme.dangerLight,
+                        ),
                         SizedBox(width: 10),
                         Text(
                           'You are offline — changes will sync when reconnected',
