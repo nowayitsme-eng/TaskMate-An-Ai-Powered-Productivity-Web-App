@@ -18,8 +18,9 @@ class AiService {
   final String _apiKey = dotenv.env['BEDROCK_API_KEY'] ?? '';
   final String _region = 'us-east-1';
   final String _modelId = 'us.anthropic.claude-sonnet-4-6';
-  
-  String get _apiUrl => 'https://bedrock-runtime.$_region.amazonaws.com/model/${Uri.encodeComponent(_modelId)}/converse';
+
+  String get _apiUrl =>
+      'https://bedrock-runtime.$_region.amazonaws.com/model/${Uri.encodeComponent(_modelId)}/converse';
 
   // ─── AI Chat History Methods ──────────────────────────────────────────────
 
@@ -31,8 +32,11 @@ class AiService {
         .collection('chat')
         .orderBy('createdAt')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   Future<void> saveMessage(String providedUserId, String role, String content) {
@@ -47,14 +51,24 @@ class AiService {
   Future<void> clearChat(String providedUserId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     // Delete in batches of 100 to avoid loading all messages at once (Fix 3)
-    var snapshot = await _db.collection('users').doc(userId).collection('chat').limit(100).get();
+    var snapshot = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('chat')
+        .limit(100)
+        .get();
     while (snapshot.docs.isNotEmpty) {
       final batch = _db.batch();
       for (var doc in snapshot.docs) {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      snapshot = await _db.collection('users').doc(userId).collection('chat').limit(100).get();
+      snapshot = await _db
+          .collection('users')
+          .doc(userId)
+          .collection('chat')
+          .limit(100)
+          .get();
     }
   }
 
@@ -62,9 +76,11 @@ class AiService {
 
   // Extracts system messages
   List<Map<String, dynamic>> _extractSystemPrompts(
-      List<Map<String, String>> history) {
-    final systemMessages =
-        history.where((msg) => msg['role'] == 'system').toList();
+    List<Map<String, String>> history,
+  ) {
+    final systemMessages = history
+        .where((msg) => msg['role'] == 'system')
+        .toList();
     return systemMessages.map((msg) => {'text': msg['content']}).toList();
   }
 
@@ -83,14 +99,18 @@ class AiService {
 
     try {
       final payload = {
-        'system': systemPrompt.isNotEmpty ? [{'text': systemPrompt}] : [],
+        'system': systemPrompt.isNotEmpty
+            ? [
+                {'text': systemPrompt},
+              ]
+            : [],
         'messages': [
           {
             'role': 'user',
             'content': [
-              {'text': safeMessage}
-            ]
-          }
+              {'text': safeMessage},
+            ],
+          },
         ],
       };
 
@@ -128,7 +148,9 @@ class AiService {
 
       // Get the last user message
       final userMsgs = history.where((m) => m['role'] == 'user').toList();
-      final lastUserMsg = userMsgs.isNotEmpty ? userMsgs.last['content'] ?? '' : '';
+      final lastUserMsg = userMsgs.isNotEmpty
+          ? userMsgs.last['content'] ?? ''
+          : '';
 
       return await _callBedrock(
         systemPrompt: systemText,
@@ -165,8 +187,9 @@ class AiService {
   String localSummarizerFallback(String text) {
     final cleanText = text.replaceAll(RegExp(r'\s+'), ' ').trim();
     final sentences = cleanText.split(RegExp(r'(?<=[.!?])\s+'));
-    final validSentences =
-        sentences.where((s) => s.length > 20 && s.length < 200).toList();
+    final validSentences = sentences
+        .where((s) => s.length > 20 && s.length < 200)
+        .toList();
 
     if (validSentences.isEmpty) {
       return "• Couldn't generate summary from this text";
@@ -242,7 +265,7 @@ No other text, markdown, or explanation.
     } catch (e) {
       debugPrint('GenerateFlashcards Error: $e');
       return [
-        {'question': 'Failed to generate flashcards', 'answer': e.toString()}
+        {'question': 'Failed to generate flashcards', 'answer': e.toString()},
       ];
     }
   }
@@ -252,10 +275,14 @@ No other text, markdown, or explanation.
   Future<void> _checkRateLimit() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) throw Exception("Unauthorized: Please log in.");
-    
+
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final ref = _db.collection('users').doc(userId).collection('limits').doc('ai_$today');
-    
+    final ref = _db
+        .collection('users')
+        .doc(userId)
+        .collection('limits')
+        .doc('ai_$today');
+
     final doc = await ref.get();
     if (doc.exists) {
       final count = doc.data()?['count'] ?? 0;
@@ -293,11 +320,13 @@ No explanation, no markdown code block. Example:
 
       final List<dynamic> parsed = jsonDecode(cleaned);
       return parsed
-          .map<Map<String, dynamic>>((e) => {
-                'question': e['question']?.toString() ?? '',
-                'options': List<String>.from(e['options'] ?? []),
-                'correctIndex': (e['correctIndex'] as num?)?.toInt() ?? 0,
-              })
+          .map<Map<String, dynamic>>(
+            (e) => {
+              'question': e['question']?.toString() ?? '',
+              'options': List<String>.from(e['options'] ?? []),
+              'correctIndex': (e['correctIndex'] as num?)?.toInt() ?? 0,
+            },
+          )
           .toList();
     } catch (e) {
       debugPrint('GenerateQuiz Error: $e');
@@ -308,7 +337,7 @@ No explanation, no markdown code block. Example:
             'Please try again',
             'Use more detailed notes',
             'At least 100 words',
-            'Then retry'
+            'Then retry',
           ],
           'correctIndex': 1,
         },
@@ -366,7 +395,8 @@ Given a user's weekly stats, write a SHORT (3-5 sentence), warm, personalized mo
         ? 'no specific categories'
         : topCategories.join(', ');
 
-    final userMessage = '''
+    final userMessage =
+        '''
 My stats for this past week and looking ahead:
 - Completed tasks: $completedTasks
 - Overdue tasks: $overdueTasks
@@ -390,16 +420,16 @@ Please give me my weekly insight.
           .collection('insights')
           .doc('weekly')
           .set({
-        'insight': insight,
-        'generatedAt': FieldValue.serverTimestamp(),
-        'stats': {
-          'completedTasks': completedTasks,
-          'overdueTasks': overdueTasks,
-          'upcomingTasks': upcomingTasks,
-          'pomodoroMinutes': pomodoroMinutes,
-          'topCategories': topCategories,
-        },
-      });
+            'insight': insight,
+            'generatedAt': FieldValue.serverTimestamp(),
+            'stats': {
+              'completedTasks': completedTasks,
+              'overdueTasks': overdueTasks,
+              'upcomingTasks': upcomingTasks,
+              'pomodoroMinutes': pomodoroMinutes,
+              'topCategories': topCategories,
+            },
+          });
 
       return insight;
     } catch (e) {
