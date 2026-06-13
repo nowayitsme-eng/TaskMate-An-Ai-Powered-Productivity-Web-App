@@ -118,7 +118,13 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Card(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: AppTheme.cardShadow,
+          border: Border.all(color: AppTheme.border),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -190,9 +196,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget _buildModeSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppTheme.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
@@ -249,9 +255,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
   Widget _buildInputArea() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: AppTheme.background,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: AppTheme.border),
       ),
       padding: const EdgeInsets.all(20),
       child: TextField(
