@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutBack,
+              curve: Curves.easeOutCubic,
               height: 4,
               width: isSelected ? 16 : 0,
               decoration: BoxDecoration(
