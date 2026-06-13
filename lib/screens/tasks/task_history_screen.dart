@@ -5,6 +5,7 @@ import '../../models/task.dart';
 import '../../services/task_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/empty_state_widget.dart';
 
 class TaskHistoryScreen extends StatelessWidget {
   const TaskHistoryScreen({super.key});
@@ -50,11 +51,10 @@ class TaskHistoryScreen extends StatelessWidget {
 
           final tasks = snapshot.data ?? [];
           if (tasks.isEmpty) {
-            return const Center(
-              child: Text(
-                'No archived tasks found.',
-                style: TextStyle(color: AppTheme.gray),
-              ),
+            return const EmptyStateWidget(
+              icon: Icons.history_toggle_off_rounded,
+              title: 'No archived tasks',
+              subtitle: 'Tasks that you archive will appear here.',
             );
           }
 
