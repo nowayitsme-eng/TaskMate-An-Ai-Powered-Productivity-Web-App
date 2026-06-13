@@ -35,7 +35,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Flashcards', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Flashcards',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Column(
@@ -47,7 +50,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               itemCount: widget.flashcards.length,
               itemBuilder: (context, index) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 20.0,
+                  ),
                   child: _FlipCard(
                     index: index + 1,
                     total: widget.flashcards.length,
@@ -69,13 +75,20 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     curve: Curves.easeInOut,
                   );
                 },
-                icon: const Icon(Icons.arrow_back_ios, color: AppTheme.primaryLight),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppTheme.primaryLight,
+                ),
                 iconSize: 28,
               ),
               const SizedBox(width: 32),
               const Text(
                 'Tap to flip',
-                style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(width: 32),
               IconButton(
@@ -85,7 +98,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     curve: Curves.easeInOut,
                   );
                 },
-                icon: const Icon(Icons.arrow_forward_ios, color: AppTheme.primaryLight),
+                icon: const Icon(
+                  Icons.arrow_forward_ios,
+                  color: AppTheme.primaryLight,
+                ),
                 iconSize: 28,
               ),
             ],
@@ -114,7 +130,8 @@ class _FlipCard extends StatefulWidget {
   State<_FlipCard> createState() => _FlipCardState();
 }
 
-class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixin {
+class _FlipCardState extends State<_FlipCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _showAnswer = false;
@@ -126,9 +143,10 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -165,8 +183,14 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isFront
-                      ? [AppTheme.primary.withValues(alpha: 0.3), AppTheme.primaryDark.withValues(alpha: 0.2)]
-                      : [AppTheme.secondary.withValues(alpha: 0.3), AppTheme.secondaryDark.withValues(alpha: 0.2)],
+                      ? [
+                          AppTheme.primary.withValues(alpha: 0.3),
+                          AppTheme.primaryDark.withValues(alpha: 0.2),
+                        ]
+                      : [
+                          AppTheme.secondary.withValues(alpha: 0.3),
+                          AppTheme.secondaryDark.withValues(alpha: 0.2),
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -179,10 +203,12 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isFront ? AppTheme.primary.withValues(alpha: 0.1) : AppTheme.secondary.withValues(alpha: 0.1),
+                    color: isFront
+                        ? AppTheme.primary.withValues(alpha: 0.1)
+                        : AppTheme.secondary.withValues(alpha: 0.1),
                     blurRadius: 20,
                     spreadRadius: 5,
-                  )
+                  ),
                 ],
               ),
               child: Transform(
@@ -194,7 +220,9 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                     Text(
                       isFront ? 'Q ${widget.index}/${widget.total}' : 'Answer',
                       style: TextStyle(
-                        color: isFront ? AppTheme.primaryDark : AppTheme.secondaryDark,
+                        color: isFront
+                            ? AppTheme.primaryDark
+                            : AppTheme.secondaryDark,
                         fontWeight: FontWeight.w900,
                         fontSize: 15,
                         letterSpacing: 2,
@@ -206,7 +234,12 @@ class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixi
                         child: Text(
                           isFront ? widget.question : widget.answer,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.5, color: AppTheme.textPrimary),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            height: 1.5,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
                     ),
