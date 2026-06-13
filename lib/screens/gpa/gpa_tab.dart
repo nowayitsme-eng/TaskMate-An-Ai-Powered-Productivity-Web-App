@@ -303,7 +303,9 @@ class _GpaTabState extends State<GpaTab> {
         if (subjects.isEmpty)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 40),
-            child: const Column(
+            child: const Center(
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.school_outlined, size: 48, color: AppTheme.border),
                 SizedBox(height: 12),
@@ -325,6 +327,7 @@ class _GpaTabState extends State<GpaTab> {
                   ),
                 ),
               ],
+              ),
             ),
           )
         else
