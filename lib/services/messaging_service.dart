@@ -115,11 +115,13 @@ class MessagingService {
         toastType = ToastType.info;
     }
 
-    ToastController().show(ToastMessage(
-      title: notification.title ?? 'TaskMate',
-      body: notification.body ?? '',
-      type: toastType,
-    ));
+    ToastController().show(
+      ToastMessage(
+        title: notification.title ?? 'TaskMate',
+        body: notification.body ?? '',
+        type: toastType,
+      ),
+    );
   }
 
   // ─── Manual Push Helpers ──────────────────────────────────────────────────
@@ -131,7 +133,7 @@ class MessagingService {
         ? badgeNames.first
         : '${badgeNames.length} new badges';
     ToastController().showAchievement(
-      '🏆 Badge Earned!',
+      'Badge Earned',
       'You unlocked: $badgeText',
     );
   }
@@ -139,30 +141,27 @@ class MessagingService {
   /// Call this when user levels up.
   void notifyLevelUp(int newLevel) {
     ToastController().showAchievement(
-      '⚡ Level Up!',
-      'You reached Level $newLevel! Your companion grows stronger!',
+      'Level Up',
+      'You reached Level $newLevel. Keep it up!',
     );
   }
 
   /// Call this when a task is completed.
   void notifyTaskCompleted(String taskName) {
-    ToastController().showSuccess(
-      '✅ Task Complete!',
-      taskName,
-    );
+    ToastController().showSuccess('Task Complete', taskName);
   }
 
   /// Call this when Pomodoro session ends.
   void notifyPomodoroEnd({bool isBreak = false}) {
     if (isBreak) {
       ToastController().showInfo(
-        '☕ Break time!',
-        'Take a short break. You earned it!',
+        'Break Time',
+        'Take a short break — you earned it.',
       );
     } else {
       ToastController().showSuccess(
-        '🍅 Session Done!',
-        'Great focus! Time for a break.',
+        'Session Complete',
+        'Great focus. Ready for a break?',
       );
     }
   }
