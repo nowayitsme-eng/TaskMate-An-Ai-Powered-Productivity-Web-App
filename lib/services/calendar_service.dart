@@ -121,7 +121,11 @@ class CalendarService {
       _debounceTimers.remove(task.id);
       try {
         final event = _taskToEvent(task);
-        await _calendarApi!.events.update(event, 'primary', task.calendarEventId!);
+        await _calendarApi!.events.update(
+          event,
+          'primary',
+          task.calendarEventId!,
+        );
       } catch (_) {}
     });
   }
@@ -164,8 +168,9 @@ class CalendarService {
           .where('calendarEventId', isNull: false)
           .get();
 
-      final existingIds =
-          existingSnapshot.docs.map((d) => d.data()['calendarEventId'] as String?).toSet();
+      final existingIds = existingSnapshot.docs
+          .map((d) => d.data()['calendarEventId'] as String?)
+          .toSet();
 
       int created = 0;
       for (final event in events.items!) {
