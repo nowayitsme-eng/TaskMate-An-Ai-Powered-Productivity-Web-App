@@ -7,16 +7,17 @@ class GpaService {
 
   Stream<List<SubjectModel>> getSubjects(String providedUserId) {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
-    return _db
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map((doc) {
+    return _db.collection('users').doc(userId).snapshots().map((doc) {
       if (!doc.exists) return [];
       final data = doc.data() as Map<String, dynamic>;
       final map = data['subjectsMap'] as Map<String, dynamic>? ?? {};
       return map.entries
-          .map((e) => SubjectModel.fromMap(e.key, Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => SubjectModel.fromMap(
+              e.key,
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .toList();
     });
   }
@@ -27,11 +28,8 @@ class GpaService {
     subject.id = docId;
     return _db.collection('users').doc(userId).set({
       'subjectsMap': {
-        docId: {
-          ...subject.toMap(),
-          'createdAt': FieldValue.serverTimestamp(),
-        }
-      }
+        docId: {...subject.toMap(), 'createdAt': FieldValue.serverTimestamp()},
+      },
     }, SetOptions(merge: true));
   }
 
