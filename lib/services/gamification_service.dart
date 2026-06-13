@@ -12,9 +12,8 @@ class GamificationService {
 
   static const int xpPerTask = 10;
 
-  DocumentReference _profileRef(String userId) => _db
-      .collection('users')
-      .doc(userId);
+  DocumentReference _profileRef(String userId) =>
+      _db.collection('users').doc(userId);
 
   // ─── Profile Stream ───────────────────────────────────────────────────────
 
@@ -27,20 +26,24 @@ class GamificationService {
       }
     } catch (_) {}
 
-    yield* _profileRef(userId).snapshots().map((doc) {
-      if (!doc.exists) return const UserProfile();
-      final profile = UserProfile.fromMap(doc.data() as Map<String, dynamic>);
-      _cacheService.cacheProfile(userId, profile);
-      return profile;
-    }).handleError((error) {});
+    yield* _profileRef(userId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) return const UserProfile();
+          final profile = UserProfile.fromMap(
+            doc.data() as Map<String, dynamic>,
+          );
+          _cacheService.cacheProfile(userId, profile);
+          return profile;
+        })
+        .handleError((error) {});
   }
 
   Future<void> updateDisplayName(String providedUserId, String newName) async {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
-    await _profileRef(userId).set(
-      {'displayName': newName},
-      SetOptions(merge: true),
-    );
+    await _profileRef(
+      userId,
+    ).set({'displayName': newName}, SetOptions(merge: true));
   }
 
   // ─── XP Management ───────────────────────────────────────────────────────
@@ -53,23 +56,20 @@ class GamificationService {
 
     await _db.runTransaction((tx) async {
       final doc = await tx.get(ref);
-      final current =
-          doc.exists ? UserProfile.fromMap(doc.data() as Map<String, dynamic>) : const UserProfile();
+      final current = doc.exists
+          ? UserProfile.fromMap(doc.data() as Map<String, dynamic>)
+          : const UserProfile();
 
       final newXp = (current.xp + amount).clamp(0, double.maxFinite.toInt());
       // Level thresholds: 100 XP per level (cumulative)
       final newLevel = (newXp / 100).floor() + 1;
 
-      tx.set(
-        ref,
-        {
-          'xp': newXp,
-          'level': newLevel,
-          'badges': current.badges,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      tx.set(ref, {
+        'xp': newXp,
+        'level': newLevel,
+        'badges': current.badges,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     });
   }
 
@@ -92,17 +92,17 @@ class GamificationService {
           ? UserProfile.fromMap(doc.data() as Map<String, dynamic>)
           : const UserProfile();
 
-      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(0, double.maxFinite.toInt());
-      final newPomodoro = (current.lifetimePomodoroMinutes + pomodoroDelta).clamp(0, double.maxFinite.toInt());
-
-      tx.set(
-        ref,
-        {
-          if (tasksDelta != 0) 'lifetimeTasksCompleted': newTasks,
-          if (pomodoroDelta != 0) 'lifetimePomodoroMinutes': newPomodoro,
-        },
-        SetOptions(merge: true),
+      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(
+        0,
+        double.maxFinite.toInt(),
       );
+      final newPomodoro = (current.lifetimePomodoroMinutes + pomodoroDelta)
+          .clamp(0, double.maxFinite.toInt());
+
+      tx.set(ref, {
+        if (tasksDelta != 0) 'lifetimeTasksCompleted': newTasks,
+        if (pomodoroDelta != 0) 'lifetimePomodoroMinutes': newPomodoro,
+      }, SetOptions(merge: true));
     });
   }
 
@@ -121,7 +121,9 @@ class GamificationService {
 
     await _db.runTransaction((tx) async {
       final doc = await tx.get(ref);
-      final data = doc.exists ? doc.data() as Map<String, dynamic> : <String, dynamic>{};
+      final data = doc.exists
+          ? doc.data() as Map<String, dynamic>
+          : <String, dynamic>{};
       final current = UserProfile.fromMap(data);
 
       // 1. Calculate XP
@@ -131,14 +133,20 @@ class GamificationService {
 
       // 2. Calculate Lifetime Stats
       final tasksDelta = isCompleted ? 1 : -1;
-      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(0, double.maxFinite.toInt());
+      final newTasks = (current.lifetimeTasksCompleted + tasksDelta).clamp(
+        0,
+        double.maxFinite.toInt(),
+      );
 
       // 3. Activity Map (Heatmap)
       final dateKey = DateFormat('yyyy-MM-dd').format(actionDate);
       final activityMap = data['activityMap'] as Map<String, dynamic>? ?? {};
       final dayData = activityMap[dateKey] as Map<String, dynamic>? ?? {};
       final currentDayTasks = (dayData['tasksCompleted'] as num?)?.toInt() ?? 0;
-      final newDayTasks = (currentDayTasks + tasksDelta).clamp(0, double.maxFinite.toInt());
+      final newDayTasks = (currentDayTasks + tasksDelta).clamp(
+        0,
+        double.maxFinite.toInt(),
+      );
 
       // Merge Update
       final update = {
@@ -147,10 +155,8 @@ class GamificationService {
         'lifetimeTasksCompleted': newTasks,
         'lastUpdated': FieldValue.serverTimestamp(),
         'activityMap': {
-          dateKey: {
-            'tasksCompleted': newDayTasks,
-          }
-        }
+          dateKey: {'tasksCompleted': newDayTasks},
+        },
       };
 
       tx.set(ref, update, SetOptions(merge: true));
@@ -168,20 +174,23 @@ class GamificationService {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? providedUserId;
     final ref = _profileRef(userId);
     final doc = await ref.get();
-    final current =
-        doc.exists ? UserProfile.fromMap(doc.data() as Map<String, dynamic>) : const UserProfile();
+    final current = doc.exists
+        ? UserProfile.fromMap(doc.data() as Map<String, dynamic>)
+        : const UserProfile();
 
     final already = Set<String>.from(current.badges);
     final toAward = <String>[];
 
     // Evaluate each badge condition
-    if (!already.contains('first_task') && current.lifetimeTasksCompleted >= 1) {
+    if (!already.contains('first_task') &&
+        current.lifetimeTasksCompleted >= 1) {
       toAward.add('first_task');
     }
     if (!already.contains('century') && current.lifetimeTasksCompleted >= 100) {
       toAward.add('century');
     }
-    if (!already.contains('marathon') && current.lifetimePomodoroMinutes >= 500) {
+    if (!already.contains('marathon') &&
+        current.lifetimePomodoroMinutes >= 500) {
       toAward.add('marathon');
     }
     if (!already.contains('deep_focus') && consecutivePomodoros >= 4) {
@@ -201,10 +210,9 @@ class GamificationService {
     }
 
     if (toAward.isNotEmpty) {
-      await ref.set(
-        {'badges': FieldValue.arrayUnion(toAward)},
-        SetOptions(merge: true),
-      );
+      await ref.set({
+        'badges': FieldValue.arrayUnion(toAward),
+      }, SetOptions(merge: true));
     }
 
     return toAward;
