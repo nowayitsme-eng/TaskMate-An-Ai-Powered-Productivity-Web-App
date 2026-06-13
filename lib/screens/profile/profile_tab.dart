@@ -942,7 +942,7 @@ class _ProfileTabState extends State<ProfileTab> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 32),
                         // Legend
                         Expanded(
                           child: Column(
