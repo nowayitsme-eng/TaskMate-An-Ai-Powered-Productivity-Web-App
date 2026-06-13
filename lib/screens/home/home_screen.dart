@@ -49,15 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Build tabs dynamically so we can pass callbacks
     final List<Widget> tabs = [
-      DashboardTab(
-        onNavigateToTab: _navigateToTab,
-        onFocusTask: _focusOnTask,
-      ),
-      TasksTab(
-        onFocusTask: _focusOnTask,
-      ),
+      DashboardTab(onNavigateToTab: _navigateToTab, onFocusTask: _focusOnTask),
+      TasksTab(onFocusTask: _focusOnTask),
       PomodoroTab(
-        key: ValueKey(_focusedTask?.id ?? 'no-focus'), // Force rebuild when focused task changes
+        key: ValueKey(
+          _focusedTask?.id ?? 'no-focus',
+        ), // Force rebuild when focused task changes
         focusedTask: _focusedTask,
         onClearFocus: _clearFocus,
       ),
@@ -80,10 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         body: SafeArea(
-          child: IndexedStack(
-            index: _currentIndex,
-            children: tabs,
-          ),
+          child: IndexedStack(index: _currentIndex, children: tabs),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -111,16 +105,50 @@ class _HomeScreenState extends State<HomeScreen> {
               elevation: 0,
               selectedFontSize: 11,
               unselectedFontSize: 10,
-              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, height: 1.5),
-              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, height: 1.5),
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+              ),
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), activeIcon: Icon(Icons.dashboard_rounded), label: 'Home'),
-                BottomNavigationBarItem(icon: Icon(Icons.task_alt), activeIcon: Icon(Icons.task_alt), label: 'Tasks'),
-                BottomNavigationBarItem(icon: Icon(Icons.timer_outlined), activeIcon: Icon(Icons.timer), label: 'Focus'),
-                BottomNavigationBarItem(icon: Icon(Icons.calculate_outlined), activeIcon: Icon(Icons.calculate), label: 'GPA'),
-                BottomNavigationBarItem(icon: Icon(Icons.smart_toy_outlined), activeIcon: Icon(Icons.smart_toy), label: 'AI Chat'),
-                BottomNavigationBarItem(icon: Icon(Icons.school_outlined), activeIcon: Icon(Icons.school), label: 'Study'),
-                BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard_rounded),
+                  activeIcon: Icon(Icons.dashboard_rounded),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.task_alt),
+                  activeIcon: Icon(Icons.task_alt),
+                  label: 'Tasks',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.timer_outlined),
+                  activeIcon: Icon(Icons.timer),
+                  label: 'Focus',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calculate_outlined),
+                  activeIcon: Icon(Icons.calculate),
+                  label: 'GPA',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.smart_toy_outlined),
+                  activeIcon: Icon(Icons.smart_toy),
+                  label: 'AI Chat',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.school_outlined),
+                  activeIcon: Icon(Icons.school),
+                  label: 'Study',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'Profile',
+                ),
               ],
             ),
           ),
