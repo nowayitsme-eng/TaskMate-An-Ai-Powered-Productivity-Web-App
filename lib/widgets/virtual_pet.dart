@@ -63,6 +63,7 @@ class VirtualPet extends StatefulWidget {
   final int overdueTasks;
   final int completedToday;
   final int level;
+  final double levelProgress;
   final bool hasSevenDayStreak;
   final DateTime? lastActiveDate;
 
@@ -71,6 +72,7 @@ class VirtualPet extends StatefulWidget {
     required this.overdueTasks,
     required this.completedToday,
     required this.level,
+    required this.levelProgress,
     this.hasSevenDayStreak = false,
     this.lastActiveDate,
   });
@@ -149,7 +151,9 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
 
   PetMood get _mood {
     if (widget.lastActiveDate != null) {
-      final daysSinceActive = DateTime.now().difference(widget.lastActiveDate!).inDays;
+      final daysSinceActive = DateTime.now()
+          .difference(widget.lastActiveDate!)
+          .inDays;
       if (daysSinceActive >= 2) return PetMood.wilting;
     }
     if (widget.overdueTasks >= 5) return PetMood.stressed;
@@ -214,7 +218,9 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
         double scale = 1.0;
 
         if (_mood == PetMood.stressed) dx = _shakeAnimation.value;
-        if (_mood == PetMood.happy || _mood == PetMood.thriving || _mood == PetMood.neutral) {
+        if (_mood == PetMood.happy ||
+            _mood == PetMood.thriving ||
+            _mood == PetMood.neutral) {
           scale = _breatheAnimation.value;
         }
 
@@ -247,11 +253,6 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
   }
 
   Widget _buildStatusText() {
-    final next = _nextEvolution;
-    final progress = next != null 
-        ? (widget.level - _evolution.minLevel) / (next.minLevel - _evolution.minLevel) 
-        : 1.0;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,7 +298,7 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
+            value: widget.levelProgress,
             backgroundColor: AppTheme.border,
             valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.secondary),
             minHeight: 6,
@@ -333,9 +334,9 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
               const SizedBox(height: 24),
               Text(
                 _evolution.name,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppTheme.secondary,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineMedium?.copyWith(color: AppTheme.secondary),
               ),
               const SizedBox(height: 4),
               Text(
@@ -351,7 +352,10 @@ class _VirtualPetState extends State<VirtualPet> with TickerProviderStateMixin {
               Text(
                 _evolution.description,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -380,25 +384,30 @@ class PlantPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2 + 10);
-    
+
     // Pot
     final potPaint = Paint()
-      ..color = const Color(0xFFE2E8F0) // slate-200
+      ..color =
+          const Color(0xFFE2E8F0) // slate-200
       ..style = PaintingStyle.fill;
-    
+
     final potPath = Path()
       ..moveTo(center.dx - 16, center.dy + 8)
       ..lineTo(center.dx + 16, center.dy + 8)
       ..lineTo(center.dx + 12, center.dy + 24)
       ..lineTo(center.dx - 12, center.dy + 24)
       ..close();
-      
+
     // Pot Rim
     final rimRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(center.dx, center.dy + 8), width: 36, height: 6),
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy + 8),
+        width: 36,
+        height: 6,
+      ),
       const Radius.circular(2),
     );
-    
+
     canvas.drawPath(potPath, potPaint);
     canvas.drawRRect(rimRect, potPaint);
 
@@ -408,12 +417,14 @@ class PlantPainter extends CustomPainter {
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-      
+
     final leafPaint = Paint()
       ..color = _getMoodColor()
       ..style = PaintingStyle.fill;
 
-    double droop = (mood == PetMood.wilting || mood == PetMood.sad) ? 10.0 : 0.0;
+    double droop = (mood == PetMood.wilting || mood == PetMood.sad)
+        ? 10.0
+        : 0.0;
 
     if (stage == PetStage.seed) {
       // Just a tiny green dot sticking out
@@ -424,31 +435,64 @@ class PlantPainter extends CustomPainter {
       if (stage == PetStage.sapling) height = 25.0;
       if (stage == PetStage.plant) height = 30.0;
       if (stage == PetStage.tree) height = 35.0;
-      
+
       final stemPath = Path()
         ..moveTo(center.dx, center.dy + 5)
-        ..quadraticBezierTo(center.dx + (droop/2), center.dy - height/2, center.dx + droop, center.dy - height);
-      
+        ..quadraticBezierTo(
+          center.dx + (droop / 2),
+          center.dy - height / 2,
+          center.dx + droop,
+          center.dy - height,
+        );
+
       canvas.drawPath(stemPath, stemPaint);
 
       // Leaves
-      _drawLeaf(canvas, Offset(center.dx - 2, center.dy - height/2), -math.pi/4 + (droop*0.05), leafPaint);
-      _drawLeaf(canvas, Offset(center.dx + 2, center.dy - height*0.8), math.pi/4 + (droop*0.05), leafPaint);
-      
+      _drawLeaf(
+        canvas,
+        Offset(center.dx - 2, center.dy - height / 2),
+        -math.pi / 4 + (droop * 0.05),
+        leafPaint,
+      );
+      _drawLeaf(
+        canvas,
+        Offset(center.dx + 2, center.dy - height * 0.8),
+        math.pi / 4 + (droop * 0.05),
+        leafPaint,
+      );
+
       if (stage == PetStage.plant || stage == PetStage.tree) {
-        _drawLeaf(canvas, Offset(center.dx - 2, center.dy - height*0.2), -math.pi/6, leafPaint);
+        _drawLeaf(
+          canvas,
+          Offset(center.dx - 2, center.dy - height * 0.2),
+          -math.pi / 6,
+          leafPaint,
+        );
       }
-      
+
       if (stage == PetStage.tree) {
-        _drawLeaf(canvas, Offset(center.dx + droop, center.dy - height), -math.pi/2, leafPaint); // Top leaf
+        _drawLeaf(
+          canvas,
+          Offset(center.dx + droop, center.dy - height),
+          -math.pi / 2,
+          leafPaint,
+        ); // Top leaf
       }
     }
-    
+
     // Face (eyes) if happy or thriving
     if (mood == PetMood.happy || mood == PetMood.thriving) {
       final eyePaint = Paint()..color = Colors.white;
-      canvas.drawCircle(Offset(center.dx - 4 + droop, center.dy - 12), 1.5, eyePaint);
-      canvas.drawCircle(Offset(center.dx + 4 + droop, center.dy - 12), 1.5, eyePaint);
+      canvas.drawCircle(
+        Offset(center.dx - 4 + droop, center.dy - 12),
+        1.5,
+        eyePaint,
+      );
+      canvas.drawCircle(
+        Offset(center.dx + 4 + droop, center.dy - 12),
+        1.5,
+        eyePaint,
+      );
     }
   }
 
@@ -456,29 +500,35 @@ class PlantPainter extends CustomPainter {
     canvas.save();
     canvas.translate(pos.dx, pos.dy);
     canvas.rotate(angle);
-    
+
     final path = Path()
       ..moveTo(0, 0)
       ..quadraticBezierTo(-8, -4, -10, -10)
       ..quadraticBezierTo(-4, -8, 0, 0)
       ..close();
-      
+
     canvas.drawPath(path, paint);
     canvas.restore();
   }
 
   Color _getMoodColor() {
     switch (mood) {
-      case PetMood.thriving: return const Color(0xFF059669); // emerald-600
-      case PetMood.happy: return const Color(0xFF10B981); // emerald-500
-      case PetMood.neutral: return const Color(0xFF34D399); // emerald-400
-      case PetMood.sad: return const Color(0xFF94A3B8); // slate-400
-      case PetMood.stressed: return const Color(0xFFF43F5E); // rose-500
-      case PetMood.wilting: return const Color(0xFFCBD5E1); // slate-300
+      case PetMood.thriving:
+        return const Color(0xFF059669); // emerald-600
+      case PetMood.happy:
+        return const Color(0xFF10B981); // emerald-500
+      case PetMood.neutral:
+        return const Color(0xFF34D399); // emerald-400
+      case PetMood.sad:
+        return const Color(0xFF94A3B8); // slate-400
+      case PetMood.stressed:
+        return const Color(0xFFF43F5E); // rose-500
+      case PetMood.wilting:
+        return const Color(0xFFCBD5E1); // slate-300
     }
   }
 
   @override
-  bool shouldRepaint(PlantPainter oldDelegate) => 
+  bool shouldRepaint(PlantPainter oldDelegate) =>
       oldDelegate.stage != stage || oldDelegate.mood != mood;
 }
