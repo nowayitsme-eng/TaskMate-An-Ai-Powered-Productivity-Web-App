@@ -16,15 +16,19 @@ class TaskHistoryScreen extends StatelessWidget {
     final taskService = TaskService();
 
     if (userId == null) {
-      return const Scaffold(
-        body: Center(child: Text('Not authenticated')),
-      );
+      return const Scaffold(body: Center(child: Text('Not authenticated')));
     }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Archived Tasks', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Archived Tasks',
+          style: TextStyle(
+            color: AppTheme.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimary),
@@ -36,7 +40,12 @@ class TaskHistoryScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: AppTheme.danger)));
+            return Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: AppTheme.danger),
+              ),
+            );
           }
 
           final tasks = snapshot.data ?? [];
@@ -65,11 +74,16 @@ class TaskHistoryScreen extends StatelessWidget {
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: ListTile(
-                  leading: const Icon(Icons.history, color: AppTheme.textSecondary),
+                  leading: const Icon(
+                    Icons.history,
+                    color: AppTheme.textSecondary,
+                  ),
                   title: Text(
                     task.text,
                     style: TextStyle(
-                      decoration: task.completed ? TextDecoration.lineThrough : null,
+                      decoration: task.completed
+                          ? TextDecoration.lineThrough
+                          : null,
                       color: AppTheme.textPrimary,
                     ),
                   ),
@@ -81,17 +95,30 @@ class TaskHistoryScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.restore, color: AppTheme.primaryLight),
+                        icon: const Icon(
+                          Icons.restore,
+                          color: AppTheme.primaryLight,
+                        ),
                         tooltip: 'Restore to Main List',
                         onPressed: () {
-                          taskService.updateTask(userId, task.id, {'isArchived': false});
+                          taskService.updateTask(userId, task.id, {
+                            'isArchived': false,
+                          });
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_forever, color: AppTheme.dangerLight),
+                        icon: const Icon(
+                          Icons.delete_forever,
+                          color: AppTheme.dangerLight,
+                        ),
                         tooltip: 'Permanently Delete',
                         onPressed: () {
-                          _showDeleteDialog(context, taskService, userId, task.id);
+                          _showDeleteDialog(
+                            context,
+                            taskService,
+                            userId,
+                            task.id,
+                          );
                         },
                       ),
                     ],
@@ -105,13 +132,24 @@ class TaskHistoryScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, TaskService service, String userId, String taskId) {
+  void _showDeleteDialog(
+    BuildContext context,
+    TaskService service,
+    String userId,
+    String taskId,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Text('Permanent Delete', style: TextStyle(color: AppTheme.textPrimary)),
-        content: const Text('Are you sure you want to permanently delete this task? This action cannot be undone.', style: TextStyle(color: AppTheme.textSecondary)),
+        title: const Text(
+          'Permanent Delete',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: const Text(
+          'Are you sure you want to permanently delete this task? This action cannot be undone.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
