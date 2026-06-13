@@ -62,10 +62,16 @@ class _DashboardTabState extends State<DashboardTab> {
       final now = DateTime.now();
       final weekAgo = now.subtract(const Duration(days: 7));
 
-      final recentCompleted =
-          tasks.where((t) => t.completed && t.dueDate.isAfter(weekAgo)).toList();
-      final overdue = tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).toList();
-      final pomodoroMinutes = tasks.fold<int>(0, (sum, t) => sum + t.pomodoroMinutes);
+      final recentCompleted = tasks
+          .where((t) => t.completed && t.dueDate.isAfter(weekAgo))
+          .toList();
+      final overdue = tasks
+          .where((t) => !t.completed && t.dueDate.isBefore(now))
+          .toList();
+      final pomodoroMinutes = tasks.fold<int>(
+        0,
+        (sum, t) => sum + t.pomodoroMinutes,
+      );
 
       final catCount = <String, int>{};
       for (final t in recentCompleted) {
@@ -77,7 +83,9 @@ class _DashboardTabState extends State<DashboardTab> {
         ..sort((a, b) => b.value.compareTo(a.value));
 
       final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
-      final upcomingTasks = tasks.where((t) => !t.completed && t.dueDate.isAfter(todayEnd)).toList();
+      final upcomingTasks = tasks
+          .where((t) => !t.completed && t.dueDate.isAfter(todayEnd))
+          .toList();
 
       final insight = await _aiService.generateWeeklyInsight(
         userId: userId,
@@ -92,7 +100,9 @@ class _DashboardTabState extends State<DashboardTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not generate insight. Try again later.')),
+          const SnackBar(
+            content: Text('Could not generate insight. Try again later.'),
+          ),
         );
       }
     } finally {
@@ -110,7 +120,8 @@ class _DashboardTabState extends State<DashboardTab> {
     return StreamBuilder<List<TaskModel>>(
       stream: taskService.getTasks(userId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(
@@ -122,9 +133,19 @@ class _DashboardTabState extends State<DashboardTab> {
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    Expanded(child: const SkeletonLoader(height: 100, borderRadius: 24)),
+                    Expanded(
+                      child: const SkeletonLoader(
+                        height: 100,
+                        borderRadius: 24,
+                      ),
+                    ),
                     const SizedBox(width: 16),
-                    Expanded(child: const SkeletonLoader(height: 100, borderRadius: 24)),
+                    Expanded(
+                      child: const SkeletonLoader(
+                        height: 100,
+                        borderRadius: 24,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 28),
@@ -141,16 +162,21 @@ class _DashboardTabState extends State<DashboardTab> {
         final now = DateTime.now();
         final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
-        final overdueTasks =
-            tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).toList();
+        final overdueTasks = tasks
+            .where((t) => !t.completed && t.dueDate.isBefore(now))
+            .toList();
         final todayTasks = tasks
-            .where((t) =>
-                !t.completed &&
-                t.dueDate.isAfter(now) &&
-                t.dueDate.isBefore(todayEnd))
+            .where(
+              (t) =>
+                  !t.completed &&
+                  t.dueDate.isAfter(now) &&
+                  t.dueDate.isBefore(todayEnd),
+            )
             .toList();
         final upcomingTasks =
-            tasks.where((t) => !t.completed && t.dueDate.isAfter(todayEnd)).toList()
+            tasks
+                .where((t) => !t.completed && t.dueDate.isAfter(todayEnd))
+                .toList()
               ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
         return SingleChildScrollView(
@@ -176,7 +202,11 @@ class _DashboardTabState extends State<DashboardTab> {
 
               // Overdue Tasks
               if (overdueTasks.isNotEmpty) ...[
-                _buildSectionHeader('🔥 Overdue', '${overdueTasks.length} tasks', AppTheme.danger),
+                _buildSectionHeader(
+                  '🔥 Overdue',
+                  '${overdueTasks.length} tasks',
+                  AppTheme.danger,
+                ),
                 const SizedBox(height: 16),
                 ...overdueTasks
                     .take(5)
@@ -186,7 +216,11 @@ class _DashboardTabState extends State<DashboardTab> {
 
               // Today's Tasks
               if (todayTasks.isNotEmpty) ...[
-                _buildSectionHeader('📋 Due Today', '${todayTasks.length} tasks', AppTheme.primary),
+                _buildSectionHeader(
+                  '📋 Due Today',
+                  '${todayTasks.length} tasks',
+                  AppTheme.primary,
+                ),
                 const SizedBox(height: 16),
                 ...todayTasks.map((t) => _buildTaskCard(context, t)),
                 const SizedBox(height: 28),
@@ -194,7 +228,11 @@ class _DashboardTabState extends State<DashboardTab> {
 
               // Upcoming
               if (upcomingTasks.isNotEmpty) ...[
-                _buildSectionHeader('📅 Upcoming', '${upcomingTasks.length} tasks', AppTheme.textSecondary),
+                _buildSectionHeader(
+                  '📅 Upcoming',
+                  '${upcomingTasks.length} tasks',
+                  AppTheme.textSecondary,
+                ),
                 const SizedBox(height: 16),
                 ...upcomingTasks.take(5).map((t) => _buildTaskCard(context, t)),
                 const SizedBox(height: 28),
@@ -211,14 +249,21 @@ class _DashboardTabState extends State<DashboardTab> {
                     padding: const EdgeInsets.symmetric(vertical: 64),
                     child: Column(
                       children: [
-                        Icon(Icons.rocket_launch,
-                            size: 64, color: AppTheme.primary.withValues(alpha: 0.2)),
+                        Icon(
+                          Icons.rocket_launch,
+                          size: 64,
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                        ),
                         const SizedBox(height: 16),
-                        Text('Your slate is clean!',
-                            style: Theme.of(context).textTheme.titleLarge),
+                        Text(
+                          'Your slate is clean!',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                         const SizedBox(height: 8),
-                        const Text('Add a task to get started.',
-                            style: TextStyle(color: AppTheme.textSecondary)),
+                        const Text(
+                          'Add a task to get started.',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
                       ],
                     ),
                   ),
@@ -252,7 +297,11 @@ class _DashboardTabState extends State<DashboardTab> {
                   color: AppTheme.primarySurface,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.psychology, color: AppTheme.primary, size: 24),
+                child: const Icon(
+                  Icons.psychology,
+                  color: AppTheme.primary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -262,7 +311,10 @@ class _DashboardTabState extends State<DashboardTab> {
                     Text(
                       'Weekly AI Insight',
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     Text(
                       'Powered by AI',
@@ -276,11 +328,20 @@ class _DashboardTabState extends State<DashboardTab> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primary,
+                        ),
                       )
-                    : const Icon(Icons.refresh, color: AppTheme.primary, size: 22),
+                    : const Icon(
+                        Icons.refresh,
+                        color: AppTheme.primary,
+                        size: 22,
+                      ),
                 tooltip: 'Refresh insight',
-                onPressed: _insightLoading ? null : () => _generateInsight(tasks),
+                onPressed: _insightLoading
+                    ? null
+                    : () => _generateInsight(tasks),
               ),
             ],
           ),
@@ -309,7 +370,11 @@ class _DashboardTabState extends State<DashboardTab> {
       children: [
         const Text(
           'Get a personalized weekly report from your AI coach — based on your task completions and Pomodoro focus time.',
-          style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5),
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         const SizedBox(height: 16),
         ElevatedButton.icon(
@@ -335,13 +400,13 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget _buildVirtualPet(List<TaskModel> tasks, DateTime now) {
     final userId = context.read<AuthService>().user?.uid ?? '';
     final today = DateTime(now.year, now.month, now.day);
-    final overdue =
-        tasks.where((t) => !t.completed && t.dueDate.isBefore(now)).length;
+    final overdue = tasks
+        .where((t) => !t.completed && t.dueDate.isBefore(now))
+        .length;
     final completedToday = tasks.where((t) {
-      if (!t.completed) return false;
-      final due = t.dueDate;
-      return due.isAfter(today) &&
-          due.isBefore(today.add(const Duration(days: 1)));
+      if (!t.completed || t.completionDate == null) return false;
+      final c = t.completionDate!;
+      return c.year == now.year && c.month == now.month && c.day == now.day;
     }).length;
 
     return StreamBuilder<UserProfile>(
@@ -355,6 +420,7 @@ class _DashboardTabState extends State<DashboardTab> {
               overdueTasks: overdue,
               completedToday: completedToday,
               level: profile.level,
+              levelProgress: profile.levelProgress,
               hasSevenDayStreak: streakSnap.data ?? false,
               lastActiveDate: profile.lastActiveDate,
             );
@@ -382,7 +448,8 @@ class _DashboardTabState extends State<DashboardTab> {
     }
 
     final userId = context.read<AuthService>().user?.uid;
-    final defaultName = context.read<AuthService>().user?.email?.split('@').first ?? 'there';
+    final defaultName =
+        context.read<AuthService>().user?.email?.split('@').first ?? 'there';
 
     return StreamBuilder<UserProfile>(
       stream: userId != null ? _gamService.getUserProfile(userId) : null,
@@ -403,8 +470,14 @@ class _DashboardTabState extends State<DashboardTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(greeting,
-                      style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                  Text(
+                    greeting,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   Text(
                     userName,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -424,30 +497,63 @@ class _DashboardTabState extends State<DashboardTab> {
   // ─── Stats Row ────────────────────────────────────────────────────────────
 
   Widget _buildStatsRow(
-      List<TaskModel> all, List<TaskModel> overdue, BuildContext context) {
+    List<TaskModel> all,
+    List<TaskModel> overdue,
+    BuildContext context,
+  ) {
     final userId = context.read<AuthService>().user?.uid;
-    
+
     return StreamBuilder<UserProfile>(
       stream: userId != null ? _gamService.getUserProfile(userId) : null,
       builder: (context, snapshot) {
         final profile = snapshot.data ?? const UserProfile();
-        
+
         return Row(
           children: [
-            _buildStatCard('Total', '${all.length}', Icons.list_alt, AppTheme.skySurface, AppTheme.skyBlue),
+            _buildStatCard(
+              'Total',
+              '${all.length}',
+              Icons.list_alt,
+              AppTheme.skySurface,
+              AppTheme.skyBlue,
+            ),
             const SizedBox(width: 12),
-            _buildStatCard('Overdue', '${overdue.length}', Icons.warning_amber_rounded, AppTheme.roseSurface, AppTheme.rosePink),
+            _buildStatCard(
+              'Overdue',
+              '${overdue.length}',
+              Icons.warning_amber_rounded,
+              AppTheme.roseSurface,
+              AppTheme.rosePink,
+            ),
             const SizedBox(width: 12),
-            _buildStatCard('Done', '${profile.lifetimeTasksCompleted}', Icons.check_circle_outline, AppTheme.secondarySurface, AppTheme.secondary),
+            _buildStatCard(
+              'Done',
+              '${profile.lifetimeTasksCompleted}',
+              Icons.check_circle_outline,
+              AppTheme.secondarySurface,
+              AppTheme.secondary,
+            ),
             const SizedBox(width: 12),
-            _buildStatCard('Focus', '${profile.lifetimePomodoroMinutes}m', Icons.timer_outlined, AppTheme.accentSurface, AppTheme.accent),
+            _buildStatCard(
+              'Focus',
+              '${profile.lifetimePomodoroMinutes}m',
+              Icons.timer_outlined,
+              AppTheme.accentSurface,
+              AppTheme.accent,
+            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color bgColor, Color iconColor) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color bgColor,
+    Color iconColor,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
@@ -467,24 +573,32 @@ class _DashboardTabState extends State<DashboardTab> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
               child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(value,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ),
             const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textMuted, fontWeight: FontWeight.w500)),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ],
         ),
@@ -553,9 +667,14 @@ class _DashboardTabState extends State<DashboardTab> {
             const SizedBox(height: 10),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label,
-                  style: TextStyle(
-                      color: iconColor, fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: iconColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -570,17 +689,33 @@ class _DashboardTabState extends State<DashboardTab> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-        Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted, fontWeight: FontWeight.w500)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppTheme.textMuted,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
 
   // ─── Task Card ────────────────────────────────────────────────────────────
 
-  Widget _buildTaskCard(BuildContext context, TaskModel task,
-      {bool isOverdue = false}) {
+  Widget _buildTaskCard(
+    BuildContext context,
+    TaskModel task, {
+    bool isOverdue = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -601,7 +736,7 @@ class _DashboardTabState extends State<DashboardTab> {
                 Text(
                   task.text,
                   style: TextStyle(
-                    fontWeight: FontWeight.w600, 
+                    fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: isOverdue ? AppTheme.danger : AppTheme.textPrimary,
                   ),
@@ -610,22 +745,35 @@ class _DashboardTabState extends State<DashboardTab> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today,
-                        size: 14,
-                        color: isOverdue ? AppTheme.danger : AppTheme.textMuted),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: isOverdue ? AppTheme.danger : AppTheme.textMuted,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       DateFormat('MMM d, h:mm a').format(task.dueDate),
                       style: TextStyle(
-                          fontSize: 12,
-                          color: isOverdue ? AppTheme.danger : AppTheme.textMuted),
+                        fontSize: 12,
+                        color: isOverdue ? AppTheme.danger : AppTheme.textMuted,
+                      ),
                     ),
                     if (task.pomodoroMinutes > 0) ...[
                       const SizedBox(width: 14),
-                      const Icon(Icons.timer_outlined, size: 14, color: AppTheme.accent),
+                      const Icon(
+                        Icons.timer_outlined,
+                        size: 14,
+                        color: AppTheme.accent,
+                      ),
                       const SizedBox(width: 6),
-                      Text('${task.pomodoroMinutes}m',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.accent, fontWeight: FontWeight.w600)),
+                      Text(
+                        '${task.pomodoroMinutes}m',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -669,9 +817,10 @@ class _ShimmerBarState extends State<_ShimmerBar>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
