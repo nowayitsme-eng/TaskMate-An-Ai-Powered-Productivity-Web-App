@@ -15,7 +15,9 @@ class CacheService {
   /// Persists the latest task list for [userId].
   Future<void> cacheTasks(String userId, List<TaskModel> tasks) async {
     try {
-      final encoded = jsonEncode(tasks.map((t) => t.toMap()..['id'] = t.id).toList());
+      final encoded = jsonEncode(
+        tasks.map((t) => t.toMap()..['id'] = t.id).toList(),
+      );
       await _storage.write(key: _key(userId), value: encoded);
     } catch (_) {}
   }
