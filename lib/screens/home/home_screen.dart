@@ -76,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        extendBody: true, // Allow body to scroll behind the nav bar
         body: IndexedStack(index: _currentIndex, children: tabs),
         bottomNavigationBar: SafeArea(
           child: Padding(
