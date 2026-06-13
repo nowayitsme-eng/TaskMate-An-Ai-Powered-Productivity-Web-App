@@ -20,20 +20,14 @@ class SkeletonLoader extends StatefulWidget {
 class _SkeletonLoaderState extends State<SkeletonLoader>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-
-    _colorAnimation = ColorTween(
-      begin: AppTheme.border.withValues(alpha: 0.3),
-      end: AppTheme.border.withValues(alpha: 0.8),
-    ).animate(_controller);
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
   }
 
   @override
@@ -45,14 +39,27 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _colorAnimation,
+      animation: _controller,
       builder: (context, child) {
         return Container(
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: _colorAnimation.value,
             borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border.all(
+              color: AppTheme.border.withValues(alpha: 0.5),
+              width: 1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment(-2.0 + (_controller.value * 4.0), -0.5),
+              end: Alignment(-1.0 + (_controller.value * 4.0), 0.5),
+              colors: [
+                AppTheme.primarySurface.withValues(alpha: 0.3),
+                AppTheme.primary.withValues(alpha: 0.08),
+                AppTheme.primarySurface.withValues(alpha: 0.3),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
           ),
         );
       },
