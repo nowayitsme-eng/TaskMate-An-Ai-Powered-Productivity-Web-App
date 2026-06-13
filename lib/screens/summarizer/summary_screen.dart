@@ -15,7 +15,10 @@ class SummaryScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Summary', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Summary',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -36,7 +39,8 @@ class SummaryScreen extends StatelessWidget {
               onTapLink: (text, href, title) async {
                 if (href == null) return;
                 final uri = Uri.tryParse(href);
-                if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+                if (uri != null &&
+                    (uri.scheme == 'http' || uri.scheme == 'https')) {
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   }
@@ -44,9 +48,20 @@ class SummaryScreen extends StatelessWidget {
               },
               styleSheet: MarkdownStyleSheet(
                 p: const TextStyle(fontSize: 16, height: 1.8),
-                h1: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.5),
-                h2: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.5),
-                listBullet: const TextStyle(color: AppTheme.primaryLight, fontSize: 18),
+                h1: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  height: 1.5,
+                ),
+                h2: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.5,
+                ),
+                listBullet: const TextStyle(
+                  color: AppTheme.primaryLight,
+                  fontSize: 18,
+                ),
               ),
             ),
           ),
