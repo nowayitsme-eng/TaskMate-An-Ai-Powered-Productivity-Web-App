@@ -67,9 +67,12 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (isLogin) {
         await authService.login(email, password);
-        
+
         if (!authService.isEmailVerified) {
-          _showMessage("Please verify your email before continuing. Check your inbox.", true);
+          _showMessage(
+            "Please verify your email before continuing. Check your inbox.",
+            true,
+          );
           setState(() => _isLoading = false);
           return;
         }
@@ -86,7 +89,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         await authService.signUp(name, email, password);
-        _showMessage('Account created! Please verify your email before logging in.', false);
+        _showMessage(
+          'Account created! Please verify your email before logging in.',
+          false,
+        );
         _toggleMode(); // Switch back to login
       }
     } on FirebaseAuthException catch (error) {
@@ -113,7 +119,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _forgotPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showMessage("Please enter your email above to reset your password.", true);
+      _showMessage(
+        "Please enter your email above to reset your password.",
+        true,
+      );
       return;
     }
 
@@ -185,13 +194,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppTheme.danger),
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppTheme.danger,
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(_errorMessage, style: const TextStyle(color: AppTheme.danger))),
+                          Expanded(
+                            child: Text(
+                              _errorMessage,
+                              style: const TextStyle(color: AppTheme.danger),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  
+
                   if (_successMessage.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -203,9 +220,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, color: AppTheme.secondary),
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: AppTheme.secondary,
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(_successMessage, style: const TextStyle(color: AppTheme.secondary))),
+                          Expanded(
+                            child: Text(
+                              _successMessage,
+                              style: const TextStyle(color: AppTheme.secondary),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -217,7 +242,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         prefixIcon: Icon(Icons.person_outline),
                         hintText: 'Full Name',
                       ),
-                      validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Required' : null,
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -229,7 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.email_outlined),
                       hintText: 'Email',
                     ),
-                    validator: (value) => value == null || !value.contains('@') ? 'Enter a valid email' : null,
+                    validator: (value) => value == null || !value.contains('@')
+                        ? 'Enter a valid email'
+                        : null,
                   ),
                   const SizedBox(height: 16),
 
@@ -240,13 +268,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: const Icon(Icons.lock_outline),
                       hintText: 'Password',
                       suffixIcon: IconButton(
-                        icon: Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+                        icon: Icon(
+                          isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () => setState(
+                          () => isPasswordVisible = !isPasswordVisible,
+                        ),
                       ),
                     ),
-                    validator: (value) => value == null || value.length < 6 ? 'Min 6 characters' : null,
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Min 6 characters'
+                        : null,
                   ),
-                  
+
                   if (!isLogin) ...[
                     const SizedBox(height: 16),
                     TextFormField(
@@ -256,23 +292,39 @@ class _LoginScreenState extends State<LoginScreen> {
                         prefixIcon: const Icon(Icons.lock_outline),
                         hintText: 'Confirm Password',
                         suffixIcon: IconButton(
-                          icon: Icon(isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                          onPressed: () => setState(() => isConfirmPasswordVisible = !isConfirmPasswordVisible),
+                          icon: Icon(
+                            isConfirmPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(
+                            () => isConfirmPasswordVisible =
+                                !isConfirmPasswordVisible,
+                          ),
                         ),
                       ),
-                      validator: (value) => value == null || value.length < 6 ? 'Min 6 characters' : null,
+                      validator: (value) => value == null || value.length < 6
+                          ? 'Min 6 characters'
+                          : null,
                     ),
                   ],
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submit,
-                      child: _isLoading 
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : Text(isLogin ? 'Login' : 'Sign Up'),
                     ),
                   ),
@@ -283,7 +335,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        isLogin ? "Don't have an account?" : "Already have an account?",
+                        isLogin
+                            ? "Don't have an account?"
+                            : "Already have an account?",
                         style: const TextStyle(color: AppTheme.textSecondary),
                       ),
                       TextButton(
@@ -301,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _forgotPassword,
                       child: const Text('Forgot Password?'),
                     ),
-                  
+
                   if (isLogin && _errorMessage.contains('verify'))
                     TextButton(
                       onPressed: _resendVerification,
