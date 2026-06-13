@@ -33,7 +33,7 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
     if (score <= 10) return const Color(0xFF9BE9A8); // gh-green-1
     if (score <= 25) return const Color(0xFF40C463); // gh-green-2
     if (score <= 50) return const Color(0xFF30A14E); // gh-green-3
-    return const Color(0xFF216E39);                 // gh-green-4
+    return const Color(0xFF216E39); // gh-green-4
   }
 
   @override
@@ -64,7 +64,9 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
     // so that today falls in the last (rightmost) column.
     final todayWeekday = today.weekday % 7; // 0=Sun, 1=Mon, ..., 6=Sat
     final startOfCurrentWeek = today.subtract(Duration(days: todayWeekday));
-    final startDate = startOfCurrentWeek.subtract(const Duration(days: (_totalWeeks - 1) * 7));
+    final startDate = startOfCurrentWeek.subtract(
+      const Duration(days: (_totalWeeks - 1) * 7),
+    );
 
     // Build month label positions (one per new month boundary)
     final List<_MonthLabel> monthLabels = [];
@@ -128,7 +130,15 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
                       width: dayLabelWidth,
                       child: Column(
                         children: List.generate(_daysPerWeek, (rowIndex) {
-                          const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                          const labels = [
+                            'Sun',
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                          ];
                           return SizedBox(
                             height: _unit,
                             child: Align(
@@ -155,26 +165,35 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
                         children: List.generate(_totalWeeks, (col) {
                           return Column(
                             children: List.generate(_daysPerWeek, (row) {
-                              final date = startDate.add(Duration(days: col * 7 + row));
+                              final date = startDate.add(
+                                Duration(days: col * 7 + row),
+                              );
                               final isFuture = date.isAfter(today);
                               final key = _dateKey(date);
-                              final score = isFuture ? 0 : (widget.activityMap[key] ?? 0);
+                              final score = isFuture
+                                  ? 0
+                                  : (widget.activityMap[key] ?? 0);
                               final isToday = date == today;
 
                               return Tooltip(
                                 message: isFuture
                                     ? ''
                                     : '${DateFormat('MMM d, yyyy').format(date)}'
-                                        '${score > 0 ? ' — $score pts' : ' — no activity'}',
+                                          '${score > 0 ? ' — $score pts' : ' — no activity'}',
                                 child: Container(
                                   width: _cellSize,
                                   height: _cellSize,
                                   margin: const EdgeInsets.all(_cellGap / 2),
                                   decoration: BoxDecoration(
-                                    color: isFuture ? Colors.transparent : _cellColor(score),
+                                    color: isFuture
+                                        ? Colors.transparent
+                                        : _cellColor(score),
                                     borderRadius: BorderRadius.circular(3),
                                     border: isToday
-                                        ? Border.all(color: AppTheme.primary, width: 1.5)
+                                        ? Border.all(
+                                            color: AppTheme.primary,
+                                            width: 1.5,
+                                          )
                                         : null,
                                   ),
                                 ),
@@ -195,19 +214,27 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Text('Less', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+            const Text(
+              'Less',
+              style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+            ),
             const SizedBox(width: 4),
-            ...[0, 10, 25, 50, 80].map((score) => Container(
-                  width: _cellSize,
-                  height: _cellSize,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: _cellColor(score),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                )),
+            ...[0, 10, 25, 50, 80].map(
+              (score) => Container(
+                width: _cellSize,
+                height: _cellSize,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: _cellColor(score),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
             const SizedBox(width: 4),
-            const Text('More', style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+            const Text(
+              'More',
+              style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+            ),
           ],
         ),
       ],
