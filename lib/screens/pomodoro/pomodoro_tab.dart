@@ -27,7 +27,8 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
   bool _isRunning = false;
   bool _isWorkTime = true;
   int _sessionCount = 0;
-  int _totalWorkSecondsThisSession = 0; // Track work seconds for the focused task
+  int _totalWorkSecondsThisSession =
+      0; // Track work seconds for the focused task
   DateTime? _lastPausedTime;
 
   final _workDurationController = TextEditingController(text: "25");
@@ -78,11 +79,11 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
           });
         }
         _lastPausedTime = null;
-        
+
         // If the timer theoretically finished while in the background
         if (_timeLeft == 0) {
-           // We will let the normal Timer tick handle the completion 
-           // on the next immediate tick.
+          // We will let the normal Timer tick handle the completion
+          // on the next immediate tick.
         }
       }
     }
@@ -99,7 +100,8 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
           await _taskService.updateTask(userId, widget.focusedTask!.id, {
             'pomodoroMinutes': currentMinutes + minutesToAdd,
           });
-          _totalWorkSecondsThisSession = _totalWorkSecondsThisSession % 60; // Keep remainder
+          _totalWorkSecondsThisSession =
+              _totalWorkSecondsThisSession % 60; // Keep remainder
         }
       }
     }
@@ -111,8 +113,12 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
         if (_isWorkTime) {
           _timeLeft = (int.tryParse(_workDurationController.text) ?? 25) * 60;
         } else {
-          final isLongBreak = _sessionCount > 0 &&
-              _sessionCount % (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) == 0;
+          final isLongBreak =
+              _sessionCount > 0 &&
+              _sessionCount %
+                      (int.tryParse(_sessionsBeforeLongBreakController.text) ??
+                          4) ==
+                  0;
           _timeLeft = isLongBreak
               ? (int.tryParse(_longBreakDurationController.text) ?? 15) * 60
               : (int.tryParse(_breakDurationController.text) ?? 5) * 60;
@@ -136,7 +142,8 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
           if (_isWorkTime && widget.focusedTask != null) {
             _totalWorkSecondsThisSession++;
             // Flush every 60 seconds to avoid data loss
-            if (_totalWorkSecondsThisSession > 0 && _totalWorkSecondsThisSession % 60 == 0) {
+            if (_totalWorkSecondsThisSession > 0 &&
+                _totalWorkSecondsThisSession % 60 == 0) {
               _flushFocusedTime();
             }
           }
@@ -153,12 +160,18 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
 
           if (_isWorkTime) {
             _sessionCount++;
-            final isLongBreak = _sessionCount % (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) == 0;
-            
+            final isLongBreak =
+                _sessionCount %
+                    (int.tryParse(_sessionsBeforeLongBreakController.text) ??
+                        4) ==
+                0;
+
             if (isLongBreak) {
-              _timeLeft = (int.tryParse(_longBreakDurationController.text) ?? 15) * 60;
+              _timeLeft =
+                  (int.tryParse(_longBreakDurationController.text) ?? 15) * 60;
             } else {
-              _timeLeft = (int.tryParse(_breakDurationController.text) ?? 5) * 60;
+              _timeLeft =
+                  (int.tryParse(_breakDurationController.text) ?? 5) * 60;
             }
             _isWorkTime = false;
 
@@ -173,38 +186,51 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
 
             // Grant XP and log activity for the completed work session
             if (userId != null) {
-              final minutesWorked = int.tryParse(_workDurationController.text) ?? 25;
+              final minutesWorked =
+                  int.tryParse(_workDurationController.text) ?? 25;
               _activityService.logActivity(
-                userId, 
+                userId,
                 pomodoroMinutes: minutesWorked,
                 subject: widget.focusedTask?.subject ?? 'General',
               );
               _gamService.addXp(userId, minutesWorked);
-              _gamService.updateLifetimeStats(userId, pomodoroDelta: minutesWorked).then((_) {
-                _gamService
-                    .checkAndAwardBadges(
-                  userId,
-                  actionTime: DateTime.now(),
-                  consecutivePomodoros: _sessionCount,
-                )
-                    .then((earned) {
-                  if (earned.isNotEmpty) {
-                    MessagingService().notifyBadgeEarned(
-                      earned
-                          .map((id) => kAllBadges
-                              .firstWhere((b) => b.id == id,
-                                  orElse: () => BadgeInfo(
-                                      id: id, name: id, emoji: '🏆', description: ''))
-                              .name)
-                          .toList(),
-                    );
-                  }
-                }).catchError((e) {
-                  debugPrint('Badge error: $e');
-                });
-              }).catchError((e) {
-                debugPrint('Lifetime stats error: $e');
-              });
+              _gamService
+                  .updateLifetimeStats(userId, pomodoroDelta: minutesWorked)
+                  .then((_) {
+                    _gamService
+                        .checkAndAwardBadges(
+                          userId,
+                          actionTime: DateTime.now(),
+                          consecutivePomodoros: _sessionCount,
+                        )
+                        .then((earned) {
+                          if (earned.isNotEmpty) {
+                            MessagingService().notifyBadgeEarned(
+                              earned
+                                  .map(
+                                    (id) => kAllBadges
+                                        .firstWhere(
+                                          (b) => b.id == id,
+                                          orElse: () => BadgeInfo(
+                                            id: id,
+                                            name: id,
+                                            emoji: '🏆',
+                                            description: '',
+                                          ),
+                                        )
+                                        .name,
+                                  )
+                                  .toList(),
+                            );
+                          }
+                        })
+                        .catchError((e) {
+                          debugPrint('Badge error: $e');
+                        });
+                  })
+                  .catchError((e) {
+                    debugPrint('Lifetime stats error: $e');
+                  });
             }
           } else {
             _timeLeft = (int.tryParse(_workDurationController.text) ?? 25) * 60;
@@ -249,15 +275,21 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
 
   String get _modeText {
     if (_isWorkTime) return 'WORK';
-    final isLongBreak = _sessionCount > 0 &&
-        _sessionCount % (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) == 0;
+    final isLongBreak =
+        _sessionCount > 0 &&
+        _sessionCount %
+                (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) ==
+            0;
     return isLongBreak ? 'LONG BREAK' : 'BREAK';
   }
 
   Color get _modeColor {
     if (_isWorkTime) return AppTheme.primaryLight;
-    final isLongBreak = _sessionCount > 0 &&
-        _sessionCount % (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) == 0;
+    final isLongBreak =
+        _sessionCount > 0 &&
+        _sessionCount %
+                (int.tryParse(_sessionsBeforeLongBreakController.text) ?? 4) ==
+            0;
     return isLongBreak ? AppTheme.accentLight : AppTheme.secondaryLight;
   }
 
@@ -275,27 +307,50 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppTheme.primary.withValues(alpha: 0.25), AppTheme.secondary.withValues(alpha: 0.15)],
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.25),
+                        AppTheme.secondary.withValues(alpha: 0.15),
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.bolt, color: AppTheme.accentLight, size: 20),
+                      const Icon(
+                        Icons.bolt,
+                        color: AppTheme.accentLight,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('FOCUSING ON', style: TextStyle(fontSize: 10, letterSpacing: 2, color: AppTheme.textMuted)),
+                            const Text(
+                              'FOCUSING ON',
+                              style: TextStyle(
+                                fontSize: 10,
+                                letterSpacing: 2,
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
                             const SizedBox(height: 2),
                             Text(
                               widget.focusedTask!.text,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: AppTheme.textPrimary,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -303,7 +358,11 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                       ),
                       if (widget.onClearFocus != null)
                         IconButton(
-                          icon: const Icon(Icons.close, color: AppTheme.textMuted, size: 18),
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppTheme.textMuted,
+                            size: 18,
+                          ),
                           onPressed: widget.onClearFocus,
                           tooltip: 'Stop focusing',
                         ),
@@ -319,13 +378,23 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
-                          Icon(Icons.timer, color: AppTheme.secondaryLight, size: 28),
+                          Icon(
+                            Icons.timer,
+                            color: AppTheme.secondaryLight,
+                            size: 28,
+                          ),
                           SizedBox(width: 12),
-                          Text('Pomodoro Timer', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Pomodoro Timer',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 40),
-                      
+
                       Text(
                         _modeText,
                         style: TextStyle(
@@ -336,7 +405,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       Text(
                         _timerDisplay,
                         style: const TextStyle(
@@ -347,7 +416,7 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 40),
-                      
+
                       Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 16,
@@ -359,7 +428,10 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                             label: const Text('Start'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.secondary,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
                             ),
                           ),
                           ElevatedButton.icon(
@@ -368,33 +440,58 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
                             label: const Text('Pause'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.accent,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
                             ),
                           ),
                           TextButton.icon(
-                            onPressed: (_isRunning || _timeLeft != (int.tryParse(_workDurationController.text) ?? 25) * 60)
+                            onPressed:
+                                (_isRunning ||
+                                    _timeLeft !=
+                                        (int.tryParse(
+                                                  _workDurationController.text,
+                                                ) ??
+                                                25) *
+                                            60)
                                 ? _resetTimer
                                 : null,
                             icon: const Icon(Icons.refresh),
                             label: const Text('Reset'),
                             style: TextButton.styleFrom(
                               foregroundColor: AppTheme.textSecondary,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 48),
-                      
+
                       Wrap(
                         spacing: 24,
                         runSpacing: 24,
                         alignment: WrapAlignment.center,
                         children: [
-                          _buildSettingItem('Work (min)', _workDurationController),
-                          _buildSettingItem('Break (min)', _breakDurationController),
-                          _buildSettingItem('Long Break', _longBreakDurationController),
-                          _buildSettingItem('Sessions', _sessionsBeforeLongBreakController),
+                          _buildSettingItem(
+                            'Work (min)',
+                            _workDurationController,
+                          ),
+                          _buildSettingItem(
+                            'Break (min)',
+                            _breakDurationController,
+                          ),
+                          _buildSettingItem(
+                            'Long Break',
+                            _longBreakDurationController,
+                          ),
+                          _buildSettingItem(
+                            'Sessions',
+                            _sessionsBeforeLongBreakController,
+                          ),
                         ],
                       ),
                     ],
@@ -413,7 +510,10 @@ class _PomodoroTabState extends State<PomodoroTab> with WidgetsBindingObserver {
       width: 100,
       child: Column(
         children: [
-          Text(label, style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+          ),
           const SizedBox(height: 8),
           TextField(
             controller: controller,
