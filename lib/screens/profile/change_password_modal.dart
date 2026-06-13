@@ -82,7 +82,10 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
         children: [
           Icon(Icons.lock_reset, color: AppTheme.primaryLight),
           SizedBox(width: 10),
-          Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            'Change Password',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ],
       ),
       content: Form(
@@ -98,8 +101,7 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
                 label: 'Current Password',
                 isVisible: _showCurrent,
                 onToggle: () => setState(() => _showCurrent = !_showCurrent),
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? 'Required' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 16),
               _PasswordField(
@@ -109,7 +111,8 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
                 onToggle: () => setState(() => _showNew = !_showNew),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (v.length < 6) return 'Password must be at least 6 characters';
+                  if (v.length < 6)
+                    return 'Password must be at least 6 characters';
                   return null;
                 },
               ),
@@ -136,7 +139,10 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
                   ),
                   child: Text(
                     _errorMessage!,
-                    style: const TextStyle(color: AppTheme.dangerLight, fontSize: 13),
+                    style: const TextStyle(
+                      color: AppTheme.dangerLight,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -147,7 +153,10 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,
@@ -155,7 +164,11 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textPrimary))
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.textPrimary,
+                  ),
+                )
               : const Text('Update Password'),
         ),
       ],
@@ -187,8 +200,11 @@ class _PasswordField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         suffixIcon: IconButton(
-          icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility,
-              size: 20, color: AppTheme.textSecondary),
+          icon: Icon(
+            isVisible ? Icons.visibility_off : Icons.visibility,
+            size: 20,
+            color: AppTheme.textSecondary,
+          ),
           onPressed: onToggle,
         ),
       ),
