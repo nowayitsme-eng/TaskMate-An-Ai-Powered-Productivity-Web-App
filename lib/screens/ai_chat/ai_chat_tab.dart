@@ -224,7 +224,7 @@ class _AiChatTabState extends State<AiChatTab> {
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.background),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: userId == null
                       ? const Center(child: CircularProgressIndicator())
@@ -279,7 +279,7 @@ class _AiChatTabState extends State<AiChatTab> {
                       decoration: InputDecoration(
                         hintText: 'Ask me anything...',
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: AppTheme.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(50),
                           borderSide: BorderSide.none,
