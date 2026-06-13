@@ -40,7 +40,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
 
     // Fix 7: Hard cap to prevent OOM and runaway AI costs
     if (text.length > 12000) {
-      _showSnack('Text is too long (max 12,000 characters). Please trim your notes.');
+      _showSnack(
+        'Text is too long (max 12,000 characters). Please trim your notes.',
+      );
       return;
     }
 
@@ -62,7 +64,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
           if (mounted) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => FlashcardsScreen(flashcards: cards)),
+              MaterialPageRoute(
+                builder: (_) => FlashcardsScreen(flashcards: cards),
+              ),
             );
           }
           break;
@@ -71,7 +75,9 @@ class _SummarizerTabState extends State<SummarizerTab> {
           if (mounted) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => QuizScreen(questions: questions)),
+              MaterialPageRoute(
+                builder: (_) => QuizScreen(questions: questions),
+              ),
             );
           }
           break;
@@ -123,8 +129,10 @@ class _SummarizerTabState extends State<SummarizerTab> {
                 children: const [
                   Icon(Icons.school, color: AppTheme.accentLight),
                   SizedBox(width: 8),
-                  Text('Study Hub',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Study Hub',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -135,9 +143,7 @@ class _SummarizerTabState extends State<SummarizerTab> {
               const SizedBox(height: 24),
 
               // Main content area (Input only)
-              Expanded(
-                child: _buildInputArea(),
-              ),
+              Expanded(child: _buildInputArea()),
 
               const SizedBox(height: 24),
 
@@ -153,12 +159,23 @@ class _SummarizerTabState extends State<SummarizerTab> {
                             width: 24,
                             height: 24,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Icon(Icons.auto_awesome),
-                    label: Text(_buttonLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      _buttonLabel,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
@@ -196,17 +213,23 @@ class _SummarizerTabState extends State<SummarizerTab> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? AppTheme.primary.withValues(alpha: 0.25) : Colors.transparent,
+            color: isActive
+                ? AppTheme.primary.withValues(alpha: 0.25)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isActive ? AppTheme.primary.withValues(alpha: 0.5) : Colors.transparent,
+              color: isActive
+                  ? AppTheme.primary.withValues(alpha: 0.5)
+                  : Colors.transparent,
             ),
           ),
           child: Column(
             children: [
-              Icon(icon,
-                  size: 20,
-                  color: isActive ? AppTheme.primaryLight : AppTheme.gray),
+              Icon(
+                icon,
+                size: 20,
+                color: isActive ? AppTheme.primaryLight : AppTheme.gray,
+              ),
               const SizedBox(height: 4),
               Text(
                 label,
@@ -237,7 +260,8 @@ class _SummarizerTabState extends State<SummarizerTab> {
         expands: true,
         maxLength: 5000,
         decoration: const InputDecoration(
-          hintText: 'Paste your lecture notes, article, or any long text here...\n\nWhen you hit Generate, a dedicated full-screen view will open with your results!',
+          hintText:
+              'Paste your lecture notes, article, or any long text here...\n\nWhen you hit Generate, a dedicated full-screen view will open with your results!',
           hintStyle: TextStyle(color: AppTheme.grayLight, height: 1.5),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
