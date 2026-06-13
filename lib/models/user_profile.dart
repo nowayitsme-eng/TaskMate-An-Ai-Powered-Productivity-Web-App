@@ -28,21 +28,23 @@ class UserProfile {
       lastActiveDate: data['lastActiveDate'] != null
           ? DateTime.tryParse(data['lastActiveDate'] as String)
           : null,
-      lifetimeTasksCompleted: (data['lifetimeTasksCompleted'] as num?)?.toInt() ?? 0,
-      lifetimePomodoroMinutes: (data['lifetimePomodoroMinutes'] as num?)?.toInt() ?? 0,
+      lifetimeTasksCompleted:
+          (data['lifetimeTasksCompleted'] as num?)?.toInt() ?? 0,
+      lifetimePomodoroMinutes:
+          (data['lifetimePomodoroMinutes'] as num?)?.toInt() ?? 0,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'xp': xp,
-        'level': level,
-        'badges': badges,
-        'displayName': displayName,
-        'lifetimeTasksCompleted': lifetimeTasksCompleted,
-        'lifetimePomodoroMinutes': lifetimePomodoroMinutes,
-        if (lastActiveDate != null)
-          'lastActiveDate': lastActiveDate!.toIso8601String(),
-      };
+    'xp': xp,
+    'level': level,
+    'badges': badges,
+    'displayName': displayName,
+    'lifetimeTasksCompleted': lifetimeTasksCompleted,
+    'lifetimePomodoroMinutes': lifetimePomodoroMinutes,
+    if (lastActiveDate != null)
+      'lastActiveDate': lastActiveDate!.toIso8601String(),
+  };
 
   /// XP required to reach the next level.
   int get xpForNextLevel => level * 100;
