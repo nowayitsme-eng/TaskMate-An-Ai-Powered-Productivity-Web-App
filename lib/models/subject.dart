@@ -4,6 +4,7 @@ class SubjectModel {
   String grade;
   double gradeValue;
   double credits;
+  String semesterId;
 
   SubjectModel({
     required this.id,
@@ -11,6 +12,7 @@ class SubjectModel {
     required this.grade,
     required this.gradeValue,
     required this.credits,
+    required this.semesterId,
   });
 
   factory SubjectModel.fromMap(String id, Map<String, dynamic> data) {
@@ -20,6 +22,7 @@ class SubjectModel {
       grade: data['grade'] ?? '',
       gradeValue: (data['gradeValue'] ?? 0.0).toDouble(),
       credits: (data['credits'] ?? 0.0).toDouble(),
+      semesterId: data['semesterId'] ?? '',
     );
   }
 
@@ -29,6 +32,7 @@ class SubjectModel {
       'grade': grade,
       'gradeValue': gradeValue,
       'credits': credits,
+      'semesterId': semesterId,
     };
   }
 }
